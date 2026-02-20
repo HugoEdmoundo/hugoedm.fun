@@ -1,4 +1,4 @@
-name: Deploy Vite App to VPS
+name: Deploy to VPS
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,17 +18,29 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install deps
+      - name: Install Dependencies
         run: npm install
 
-      - name: Build
+      - name: Build Project
         run: npm run build
 
-      - name: Deploy dist to VPS
+      - name: Upload dist to VPS (temp folder)
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 75.119.159.246
+          host: ${{ secrets.VPS_HOST }}
           username: root
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "dist/*"
-          target: "/opt/main/dist"
+          source: "dist"
+          target: "/opt/main_new"
+
+      - name: Atomic Replace Folder
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            rm -rf /opt/main_old
+            mv /opt/main /opt/main_old || true
+            mv /opt/main_new/dist /opt/main
+            rm -rf /opt/main_new
