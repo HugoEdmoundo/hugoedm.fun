@@ -25,7 +25,7 @@ export default function HeroSection({ config, socialLinks = [] }: HeroSectionPro
             transition={{ duration: 0.5, type: "spring" }}
             className="mb-8"
           >
-            <div className="w-33 h-33 mx-auto rounded-full overflow-hidden border-2 border-primary/30 animate-glow-pulse">
+            <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-2 border-primary/30 animate-glow-pulse">
               <img src={config.hero_photo_url} alt="Profile" className="w-full h-full object-cover" />
             </div>
           </motion.div>
