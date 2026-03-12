@@ -8,12 +8,13 @@ export default function Assignments() {
   const { data: config } = useQuery({ queryKey: ["site-config"], queryFn: fetchSiteConfig });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative noise-overlay">
       <Navbar />
-      <div className="pt-16">
+      <div className="pt-20">
         <TasksSection tasks={tasks ?? []} />
       </div>
-      <footer className="section-padding border-t border-border/30">
+      <div className="section-divider" />
+      <footer className="py-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} {config?.site_name ?? "Portfolio"}. All rights reserved.
