@@ -102,6 +102,13 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
+              <Link
+                to="/assignments"
+                onClick={() => setMobileOpen(false)}
+                className="block text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Assignments
+              </Link>
             </div>
           </motion.div>
         )}

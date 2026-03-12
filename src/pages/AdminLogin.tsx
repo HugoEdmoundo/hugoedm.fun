@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -16,7 +16,21 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signIn(email, password);
+      // Fetch admin email from site_config to verify code
+      const { data: config } = await supabase
+        .from("site_config")
+        .select("admin_code")
+        .limit(1)
+        .single();
+
+      if (!config || config.admin_code !== code) {
+        toast({ title: "Login failed", description: "Invalid code", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      // Use the seeded admin credentials
+      await signIn("hugoedm.fun@portfolio.local", code);
       navigate("/admin");
     } catch (err: any) {
       toast({ title: "Login failed", description: err.message, variant: "destructive" });
@@ -34,29 +48,20 @@ export default function AdminLogin() {
           </div>
           <div>
             <h1 className="font-bold text-lg">Admin Login</h1>
-            <p className="text-xs text-muted-foreground">Sign in to manage your portfolio</p>
+            <p className="text-xs text-muted-foreground">Enter your access code</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Password</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Access Code</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
               className="w-full px-3 py-2 rounded-lg bg-secondary border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
               required
+              placeholder="Enter code..."
             />
           </div>
           <button
@@ -64,7 +69,7 @@ export default function AdminLogin() {
             disabled={loading}
             className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Verifying..." : "Enter"}
           </button>
         </form>
       </div>
