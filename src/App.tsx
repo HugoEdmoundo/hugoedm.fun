@@ -9,6 +9,7 @@ import { fetchSiteConfig } from "@/lib/api";
 import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import Assignments from "./pages/Assignments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
