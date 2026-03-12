@@ -200,6 +200,7 @@ export type Database = {
       site_config: {
         Row: {
           about_text: string | null
+          admin_code: string
           cv_url: string | null
           description: string | null
           favicon_url: string | null
@@ -213,6 +214,7 @@ export type Database = {
         }
         Insert: {
           about_text?: string | null
+          admin_code?: string
           cv_url?: string | null
           description?: string | null
           favicon_url?: string | null
@@ -226,6 +228,7 @@ export type Database = {
         }
         Update: {
           about_text?: string | null
+          admin_code?: string
           cv_url?: string | null
           description?: string | null
           favicon_url?: string | null

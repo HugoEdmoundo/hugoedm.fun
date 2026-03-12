@@ -1,0 +1,1 @@
+ALTER TABLE public.site_config ADD COLUMN admin_code text NOT NULL DEFAULT '?hl%3Did<26';
