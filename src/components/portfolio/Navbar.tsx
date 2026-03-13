@@ -1,23 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSiteConfig } from "@/lib/api";
-
-const navLinks = [
-  { label: "About", href: "#about" },
-  { label: "Projects", href: "#projects" },
-  { label: "Skills", href: "#skills" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "Resume", href: "#resume" },
-];
 
 export default function Navbar() {
   const { data: config } = useQuery({ queryKey: ["site-config"], queryFn: fetchSiteConfig });
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const isHome = location.pathname === "/";
+  const isAssignments = location.pathname === "/assignments";
   const [dark, setDark] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("theme");
@@ -41,50 +33,50 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
-      <div className="glass-card-strong border-b border-border/20 backdrop-blur-2xl">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="font-bold text-lg gradient-text tracking-tight">
+      <div className="glass-card-strong border-b border-border/30 backdrop-blur-2xl">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+          <Link to="/" className="font-bold text-lg gradient-text tracking-tight whitespace-nowrap">
             {config?.site_name || "Portfolio"}
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {isHome && navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-all duration-300"
-              >
-                {link.label}
-              </a>
-            ))}
+          <div className="hidden md:flex items-center gap-2">
             <Link
               to="/assignments"
-              className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-all duration-300"
+              className={`px-4 py-2 text-sm rounded-xl transition-all duration-300 border ${
+                isAssignments
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary/50 text-muted-foreground border-border hover:text-foreground hover:bg-secondary"
+              }`}
             >
               Assignments
             </Link>
             <button
               onClick={toggleTheme}
-              className="ml-2 p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-all duration-300"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-all duration-300"
+              aria-label="Toggle theme"
             >
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
           </div>
 
-          {/* Mobile toggle */}
           <div className="md:hidden flex items-center gap-1">
-            <button onClick={toggleTheme} className="p-2 text-muted-foreground hover:text-foreground rounded-lg transition-colors">
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+              aria-label="Toggle theme"
+            >
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-muted-foreground hover:text-foreground rounded-lg transition-colors">
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              className="px-3 py-2 text-xs font-medium rounded-lg bg-secondary/60 text-foreground"
+            >
+              Menu
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -93,21 +85,15 @@ export default function Navbar() {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden glass-card-strong border-b border-border/20 overflow-hidden"
           >
-            <div className="px-4 py-4 space-y-1">
-              {isHome && navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
+            <div className="px-4 py-3">
               <Link
                 to="/assignments"
                 onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+                className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isAssignments
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary/60 text-muted-foreground"
+                }`}
               >
                 Assignments
               </Link>

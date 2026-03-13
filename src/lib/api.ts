@@ -229,8 +229,23 @@ export async function deleteSocialLink(id: string) {
 }
 
 export async function checkIsAdmin() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return false;
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
   return !!data;
+}
+
+export async function ensureAdminUserForCode(accessCode: string) {
+  const { error } = await supabase.functions.invoke("seed-admin", {
+    body: { accessCode },
+  });
+
+  if (error) throw error;
 }
