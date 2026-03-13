@@ -209,6 +209,8 @@ export type Database = {
           hero_name: string | null
           hero_photo_url: string | null
           id: string
+          marketplace_cta_text: string
+          marketplace_cta_url: string
           site_name: string
           updated_at: string
         }
@@ -223,6 +225,8 @@ export type Database = {
           hero_name?: string | null
           hero_photo_url?: string | null
           id?: string
+          marketplace_cta_text?: string
+          marketplace_cta_url?: string
           site_name?: string
           updated_at?: string
         }
@@ -237,6 +241,8 @@ export type Database = {
           hero_name?: string | null
           hero_photo_url?: string | null
           id?: string
+          marketplace_cta_text?: string
+          marketplace_cta_url?: string
           site_name?: string
           updated_at?: string
         }

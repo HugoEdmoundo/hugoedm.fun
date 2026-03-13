@@ -27,7 +27,8 @@ const Index = () => {
   const { data: socialLinks } = useQuery({ queryKey: ["social-links"], queryFn: fetchSocialLinks });
 
   return (
-    <div className="min-h-screen bg-background relative noise-overlay">
+    <div className="min-h-screen bg-background relative noise-overlay overflow-hidden">
+      <div className="absolute inset-0 bg-mesh opacity-60 pointer-events-none" />
       <Navbar />
       <HeroSection config={config ?? null} socialLinks={socialLinks ?? []} />
       <AboutSection config={config ?? null} />
@@ -36,10 +37,9 @@ const Index = () => {
       <SkillsSection skills={skills ?? []} />
       <GallerySection items={gallery ?? []} />
       <ResumeSection education={education ?? []} experience={experience ?? []} />
-      
-      {/* Footer */}
+
       <div className="section-divider" />
-      <footer className="py-12 px-4">
+      <footer className="py-12 px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} {config?.site_name ?? "Portfolio"}. All rights reserved.

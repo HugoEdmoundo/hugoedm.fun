@@ -2,7 +2,22 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { checkIsAdmin } from "@/lib/api";
-import { LogOut, Settings, FolderOpen, Palette, FileText, GraduationCap, Briefcase, Image, ListTodo, BookOpen, Home, UserCog, Share2 } from "lucide-react";
+import {
+  LogOut,
+  Settings,
+  FolderOpen,
+  Palette,
+  BookOpen,
+  GraduationCap,
+  Briefcase,
+  Image,
+  ListTodo,
+  Home,
+  UserCog,
+  Share2,
+  Sparkles,
+} from "lucide-react";
+import { motion } from "framer-motion";
 import AdminSiteConfig from "@/components/admin/AdminSiteConfig";
 import AdminProjects from "@/components/admin/AdminProjects";
 import AdminSkills from "@/components/admin/AdminSkills";
@@ -40,6 +55,7 @@ export default function AdminDashboard() {
       navigate("/admin/login");
       return;
     }
+
     if (session) {
       checkIsAdmin().then((admin) => {
         setIsAdmin(admin);
@@ -60,63 +76,59 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top bar */}
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="absolute inset-0 bg-mesh opacity-45 pointer-events-none" />
+      <div className="absolute top-8 right-4 md:right-16 w-[360px] h-[360px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+
       <header className="glass-card-strong border-b border-border/30 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="font-bold text-sm gradient-text">Admin CMS</h1>
+            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-bold text-sm md:text-base gradient-text">Admin CMS</h1>
+              <p className="text-[10px] md:text-xs text-muted-foreground">Manage portfolio content</p>
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
-            <Link to="/" className="p-2 text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/" className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors">
               <Home className="w-4 h-4" />
             </Link>
-            <button onClick={signOut} className="p-2 text-muted-foreground hover:text-foreground transition-colors">
+            <button
+              onClick={signOut}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors"
+            >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 flex gap-6">
-        {/* Sidebar */}
-        <aside className="w-52 shrink-0 hidden md:block">
-          <nav className="space-y-1 sticky top-20">
-            {tabs.map((tab) => (
-              <button
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-8 flex flex-col md:flex-row gap-5 relative z-10">
+        <aside className="w-full md:w-60 md:shrink-0">
+          <nav className="glass-card p-2 md:p-3 space-y-1 md:sticky md:top-24">
+            {tabs.map((tab, index) => (
+              <motion.button
                 key={tab.id}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.03 }}
                 onClick={() => setSearchParams({ tab: tab.id })}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                   activeTab === tab.id
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
-              </button>
+              </motion.button>
             ))}
           </nav>
         </aside>
 
-        {/* Mobile tabs */}
-        <div className="md:hidden overflow-x-auto pb-2 -mx-4 px-4 flex gap-2 mb-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSearchParams({ tab: tab.id })}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
         <main className="flex-1 min-w-0">
           {activeTab === "config" && <AdminSiteConfig />}
           {activeTab === "projects" && <AdminProjects />}
