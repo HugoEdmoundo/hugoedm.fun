@@ -16,6 +16,10 @@ interface DockProps {
 export default function Dock({ items }: DockProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  // Separate the theme toggle from other items
+  const mainItems = items.filter(i => i.id !== "theme");
+  const themeItem = items.find(i => i.id === "theme");
+
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -24,9 +28,8 @@ export default function Dock({ items }: DockProps) {
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
     >
       <div className="flex items-end gap-1 px-3 py-2 rounded-2xl bg-card/70 backdrop-blur-2xl border border-border/40 shadow-2xl shadow-black/20">
-        {items.map((item, i) => {
+        {mainItems.map((item, i) => {
           const distance = hoveredIndex !== null ? Math.abs(i - hoveredIndex) : 999;
-          const baseScale = 1;
           const hoverScale = distance === 0 ? 1.45 : distance === 1 ? 1.2 : distance === 2 ? 1.05 : 1;
 
           return (
@@ -36,7 +39,7 @@ export default function Dock({ items }: DockProps) {
               onHoverEnd={() => setHoveredIndex(null)}
               onClick={item.onClick}
               animate={{
-                scale: hoveredIndex !== null ? hoverScale : baseScale,
+                scale: hoveredIndex !== null ? hoverScale : 1,
                 y: hoveredIndex !== null && distance <= 1 ? -(distance === 0 ? 12 : 4) : 0,
               }}
               transition={{ type: "spring", stiffness: 400, damping: 18 }}
@@ -51,19 +54,39 @@ export default function Dock({ items }: DockProps) {
               >
                 {item.icon}
               </div>
-              {/* Tooltip */}
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <div className="px-2 py-1 rounded-md bg-card/95 backdrop-blur-xl border border-border/50 text-[10px] font-medium whitespace-nowrap text-foreground shadow-lg">
                   {item.label}
                 </div>
               </div>
-              {/* Active dot */}
               {item.active && (
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
               )}
             </motion.button>
           );
         })}
+
+        {/* Separator */}
+        {themeItem && (
+          <>
+            <div className="w-px h-8 bg-border/30 mx-1" />
+            <motion.button
+              onClick={themeItem.onClick}
+              whileHover={{ scale: 1.15, y: -4 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative group"
+            >
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary/60 border border-border/30 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-200">
+                {themeItem.icon}
+              </div>
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="px-2 py-1 rounded-md bg-card/95 backdrop-blur-xl border border-border/50 text-[10px] font-medium whitespace-nowrap text-foreground shadow-lg">
+                  {themeItem.label}
+                </div>
+              </div>
+            </motion.button>
+          </>
+        )}
       </div>
     </motion.div>
   );
