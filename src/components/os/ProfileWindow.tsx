@@ -17,24 +17,34 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
   return (
     <div className="p-4 space-y-4">
       {/* Hero card */}
-      <BentoCard delay={0} className="text-center py-8">
-        {config?.hero_photo_url && (
-          <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-primary/30 ring-4 ring-primary/10 mb-4">
-            <img src={config.hero_photo_url} alt="Profile" className="w-full h-full object-cover" />
-          </div>
-        )}
-        <h2 className="text-2xl font-bold gradient-text">{config?.hero_name || "Your Name"}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{config?.hero_headline || "Developer"}</p>
-        <p className="text-xs text-muted-foreground/60 mt-1 font-mono">{config?.description}</p>
+      <BentoCard delay={0} className="text-center py-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
+        <div className="relative z-10">
+          {config?.hero_photo_url && (
+            <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-primary/30 ring-4 ring-primary/10 mb-4">
+              <img src={config.hero_photo_url} alt="Profile" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <h2 className="text-2xl font-bold gradient-text">{config?.hero_name || "Your Name"}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{config?.hero_headline || "Developer"}</p>
+          <p className="text-[10px] text-muted-foreground/40 mt-2 font-mono max-w-xs mx-auto">{config?.description}</p>
+        </div>
       </BentoCard>
+
+      {/* About — narrative style */}
+      {config?.about_text && (
+        <BentoCard delay={0.15}>
+          <p className="text-[10px] font-mono text-primary tracking-widest uppercase mb-2">About</p>
+          <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{config.about_text}</p>
+        </BentoCard>
+      )}
 
       {/* Actions grid */}
       <BentoGrid className="grid-cols-2">
-        {/* Social links */}
         {socialLinks.map((link, i) => {
           const LucideIcon = (icons as any)[link.icon];
           return (
-            <BentoCard key={link.id} delay={0.1 + i * 0.05} className="flex items-center gap-3">
+            <BentoCard key={link.id} delay={0.2 + i * 0.04} className="flex items-center gap-3">
               <a href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full group">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                   {LucideIcon ? <LucideIcon className="w-4 h-4 text-primary" /> : <span className="text-xs">{link.platform[0]}</span>}
@@ -46,7 +56,7 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
         })}
 
         {config?.cv_url && (
-          <BentoCard delay={0.3}>
+          <BentoCard delay={0.35}>
             <a href={config.cv_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Download className="w-4 h-4 text-primary" />
@@ -57,9 +67,9 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
         )}
 
         {marketplaceUrl && (
-          <BentoCard delay={0.35} className="bg-primary/10 border-primary/20">
+          <BentoCard delay={0.4} className="bg-primary/5 border-primary/15">
             <a href={marketplaceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
                 <Store className="w-4 h-4 text-primary" />
               </div>
               <span className="text-xs font-semibold text-primary truncate">{marketplaceText}</span>
@@ -68,14 +78,6 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
           </BentoCard>
         )}
       </BentoGrid>
-
-      {/* About */}
-      {config?.about_text && (
-        <BentoCard delay={0.4}>
-          <p className="text-[10px] font-mono text-primary tracking-widest uppercase mb-2">About</p>
-          <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{config.about_text}</p>
-        </BentoCard>
-      )}
 
       {/* GitHub Stats */}
       {repos && repos.length > 0 && (

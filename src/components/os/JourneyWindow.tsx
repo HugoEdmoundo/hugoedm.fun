@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import type { Education, Experience, SiteConfig } from "@/lib/api";
 
 interface JourneyWindowProps {
@@ -14,42 +14,45 @@ export default function JourneyWindow({ config, education, experience }: Journey
 
   const slides = [
     {
+      type: "intro" as const,
       title: "Who I Am",
       subtitle: "The Beginning",
       content: config?.about_text || "A passionate developer building the future.",
-      accent: "from-primary/20 to-cyan-500/20",
+      accent: "from-primary to-cyan-500",
     },
     ...education.map((edu) => ({
+      type: "education" as const,
       title: edu.institution,
       subtitle: edu.degree || "Education",
       content: edu.year || "",
-      accent: "from-blue-500/20 to-primary/20",
+      accent: "from-blue-500 to-primary",
       logoUrl: edu.logo_url,
     })),
     ...experience.map((exp) => ({
+      type: "experience" as const,
       title: exp.company,
       subtitle: exp.role || "Experience",
       content: exp.description || exp.duration || "",
-      accent: "from-emerald-500/20 to-primary/20",
+      accent: "from-emerald-500 to-primary",
       logoUrl: exp.logo_url,
+      duration: exp.duration,
     })),
     {
+      type: "future" as const,
       title: "What's Next",
       subtitle: "The Future",
       content: config?.hero_headline || "Building something extraordinary.",
-      accent: "from-primary/20 to-purple-500/20",
+      accent: "from-primary to-purple-500",
     },
   ];
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
-    const scrollLeft = el.scrollLeft;
     const maxScroll = el.scrollWidth - el.clientWidth;
-    setProgress(maxScroll > 0 ? scrollLeft / maxScroll : 0);
+    setProgress(maxScroll > 0 ? el.scrollLeft / maxScroll : 0);
   };
 
-  // Handle mouse wheel → horizontal scroll
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -74,35 +77,49 @@ export default function JourneyWindow({ config, education, experience }: Journey
         {slides.map((slide, i) => (
           <div
             key={i}
-            className="min-w-full h-full snap-center flex items-center justify-center p-8 md:p-16"
+            className="min-w-full h-full snap-center flex items-center justify-center p-8 md:p-16 relative"
           >
+            {/* Background accent */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-[0.04] pointer-events-none`} />
+
             <motion.div
               initial={{ opacity: 0, x: 60 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: false, amount: 0.5 }}
               transition={{ duration: 0.6 }}
-              className="max-w-xl w-full"
+              className="max-w-2xl w-full relative"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-20 rounded-xl pointer-events-none`} />
-              
-              {"logoUrl" in slide && slide.logoUrl && (
-                <div className="w-16 h-16 rounded-xl bg-secondary/50 border border-border/30 overflow-hidden mb-6">
-                  <img src={slide.logoUrl} alt="" className="w-full h-full object-cover" />
+              {/* Type badge */}
+              <div className="flex items-center gap-3 mb-6">
+                {"logoUrl" in slide && slide.logoUrl && (
+                  <div className="w-14 h-14 rounded-xl bg-secondary/50 border border-border/30 overflow-hidden shrink-0">
+                    <img src={slide.logoUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-primary font-mono text-xs tracking-[0.3em] uppercase">
+                    {slide.subtitle}
+                  </p>
+                  {"duration" in slide && slide.duration && (
+                    <p className="text-muted-foreground/50 font-mono text-[10px] mt-0.5">{slide.duration}</p>
+                  )}
                 </div>
-              )}
-              
-              <p className="text-primary font-mono text-xs tracking-[0.3em] uppercase mb-3">
-                {slide.subtitle}
-              </p>
-              <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">{slide.title}</h2>
+              </div>
+
+              <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight leading-tight">{slide.title}</h2>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed whitespace-pre-wrap">
                 {slide.content}
               </p>
-              
-              <div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground/50 font-mono">
-                <span>{String(i + 1).padStart(2, "0")}</span>
-                <span>/</span>
-                <span>{String(slides.length).padStart(2, "0")}</span>
+
+              {/* Slide counter */}
+              <div className="mt-10 flex items-center gap-3">
+                <span className="text-xs text-muted-foreground/40 font-mono">
+                  {String(i + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+                </span>
+                <div className="flex-1 h-px bg-border/20" />
+                {i < slides.length - 1 && (
+                  <span className="text-[10px] text-muted-foreground/30 font-mono">scroll →</span>
+                )}
               </div>
             </motion.div>
           </div>
@@ -110,12 +127,23 @@ export default function JourneyWindow({ config, education, experience }: Journey
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 bg-secondary/30 shrink-0">
+      <div className="h-1.5 bg-secondary/20 shrink-0 relative">
         <motion.div
-          className="h-full bg-gradient-to-r from-primary to-cyan-400 rounded-full"
+          className="h-full bg-gradient-to-r from-primary via-emerald-400 to-cyan-400 rounded-full"
           style={{ width: `${progress * 100}%` }}
           transition={{ type: "spring", damping: 30 }}
         />
+        {/* Step dots */}
+        <div className="absolute inset-0 flex items-center justify-between px-2">
+          {slides.map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                i / (slides.length - 1) <= progress ? "bg-primary" : "bg-muted-foreground/20"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
