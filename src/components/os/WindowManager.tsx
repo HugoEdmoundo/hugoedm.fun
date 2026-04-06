@@ -38,7 +38,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
         y: win.minimized ? 100 : 0,
         x: win.maximized ? 0 : undefined,
         width: win.maximized ? "100vw" : win.width,
-        height: win.maximized ? "calc(100vh - 72px)" : win.height,
+        height: win.maximized ? "calc(100vh - 104px)" : win.height,
       }}
       exit={{ opacity: 0, scale: 0.7, y: 40 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
