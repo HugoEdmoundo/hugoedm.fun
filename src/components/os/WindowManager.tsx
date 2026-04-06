@@ -53,7 +53,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       className="absolute os-window"
       style={{
         left: win.maximized ? 0 : win.x,
-        top: win.maximized ? 0 : win.y,
+        top: win.maximized ? 32 : win.y,
         zIndex: win.zIndex,
         display: win.minimized ? "none" : "flex",
         pointerEvents: "auto",
