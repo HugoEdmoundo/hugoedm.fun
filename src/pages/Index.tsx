@@ -248,7 +248,7 @@ const Index = () => {
       </div>
 
       {/* Desktop icons */}
-      <div className="absolute top-12 left-4 md:left-8 flex flex-col gap-1 z-[3]">
+      <div className="absolute top-12 left-2 md:left-8 flex flex-row flex-wrap md:flex-col gap-0 md:gap-1 z-[3] max-w-[calc(100vw-16px)] md:max-w-none">
         {desktopIcons.map((icon, i) => (
           <DesktopIcon
             key={icon.id}
