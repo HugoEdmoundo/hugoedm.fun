@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   fetchSiteConfig,
-  fetchFeaturedProjects,
+  fetchProjects,
   fetchSkills,
   fetchGallery,
   fetchEducation,
@@ -36,7 +36,7 @@ import FloatingCode from "@/components/os/FloatingCode";
 
 const Index = () => {
   const { data: config } = useQuery({ queryKey: ["site-config"], queryFn: fetchSiteConfig });
-  const { data: projects } = useQuery({ queryKey: ["featured-projects"], queryFn: fetchFeaturedProjects });
+  const { data: projects } = useQuery({ queryKey: ["projects"], queryFn: fetchProjects });
   const { data: skills } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
   const { data: gallery } = useQuery({ queryKey: ["gallery"], queryFn: fetchGallery });
   const { data: education } = useQuery({ queryKey: ["education"], queryFn: fetchEducation });
@@ -86,17 +86,27 @@ const Index = () => {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const getCenter = useCallback((w: number, h: number) => ({
-    x: Math.max(40, (window.innerWidth - w) / 2 + (Math.random() - 0.5) * 80),
-    y: Math.max(40, (window.innerHeight - h) / 2 + (Math.random() - 0.5) * 60 - 40),
-  }), []);
+  const isMobile = window.innerWidth < 768;
+
+  const getCenter = useCallback((w: number, h: number) => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    if (vw < 768) {
+      return { x: 4, y: 36, width: vw - 8, height: vh - 110 };
+    }
+    return {
+      x: Math.max(40, (vw - w) / 2 + (Math.random() - 0.5) * 80),
+      y: Math.max(40, (vh - h) / 2 + (Math.random() - 0.5) * 60 - 40),
+    };
+  }, []);
 
   const openProfile = useCallback(() => {
     const pos = getCenter(420, 560);
     openWindow({
       id: "profile", title: "Profile.exe", icon: <User className="w-4 h-4" />,
       content: <ProfileWindow config={config ?? null} socialLinks={socialLinks ?? []} />,
-      ...pos, width: 420, height: 560,
+      width: pos.width ?? 420, height: pos.height ?? 560,
+      x: pos.x, y: pos.y,
     });
   }, [config, socialLinks, openWindow, getCenter]);
 
@@ -105,7 +115,8 @@ const Index = () => {
     openWindow({
       id: "projects", title: "Terminal.exe", icon: <Terminal className="w-4 h-4" />,
       content: <ProjectsWindow projects={projects ?? []} />,
-      ...pos, width: 640, height: 520,
+      width: pos.width ?? 640, height: pos.height ?? 520,
+      x: pos.x, y: pos.y,
     });
   }, [projects, openWindow, getCenter]);
 
@@ -114,7 +125,8 @@ const Index = () => {
     openWindow({
       id: "skills", title: "Stack.config", icon: <Palette className="w-4 h-4" />,
       content: <SkillsWindow skills={skills ?? []} />,
-      ...pos, width: 500, height: 460,
+      width: pos.width ?? 500, height: pos.height ?? 460,
+      x: pos.x, y: pos.y,
     });
   }, [skills, openWindow, getCenter]);
 
@@ -123,15 +135,21 @@ const Index = () => {
     openWindow({
       id: "gallery", title: "Gallery.app", icon: <Image className="w-4 h-4" />,
       content: <GalleryWindow items={gallery ?? []} />,
-      ...pos, width: 560, height: 480,
+      width: pos.width ?? 560, height: pos.height ?? 480,
+      x: pos.x, y: pos.y,
     });
   }, [gallery, openWindow, getCenter]);
 
   const openJourney = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const mobile = vw < 768;
     openWindow({
       id: "journey", title: "Journey.log", icon: <GraduationCap className="w-4 h-4" />,
       content: <JourneyWindow config={config ?? null} education={education ?? []} experience={experience ?? []} />,
-      x: 40, y: 20, width: window.innerWidth - 80, height: window.innerHeight - 120,
+      x: mobile ? 4 : 40, y: mobile ? 36 : 20,
+      width: mobile ? vw - 8 : vw - 80,
+      height: mobile ? vh - 110 : vh - 120,
     });
   }, [config, education, experience, openWindow]);
 
@@ -140,7 +158,8 @@ const Index = () => {
     openWindow({
       id: "tasks", title: "Assignments.todo", icon: <ListTodo className="w-4 h-4" />,
       content: <TasksWindow tasks={tasks ?? []} />,
-      ...pos, width: 480, height: 500,
+      width: pos.width ?? 480, height: pos.height ?? 500,
+      x: pos.x, y: pos.y,
     });
   }, [tasks, openWindow, getCenter]);
 

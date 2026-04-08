@@ -27,7 +27,7 @@ export default function Dock({ items }: DockProps) {
       transition={{ delay: 0.8, type: "spring", damping: 20 }}
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
     >
-      <div className="flex items-end gap-1 px-3 py-2 rounded-2xl bg-card/70 backdrop-blur-2xl border border-border/40 shadow-2xl shadow-black/20">
+      <div className="flex items-end gap-1 px-2 md:px-3 py-2 rounded-2xl bg-card/70 backdrop-blur-2xl border border-border/40 shadow-2xl shadow-black/20 max-w-[calc(100vw-32px)] overflow-x-auto">
         {mainItems.map((item, i) => {
           const distance = hoveredIndex !== null ? Math.abs(i - hoveredIndex) : 999;
           const hoverScale = distance === 0 ? 1.45 : distance === 1 ? 1.2 : distance === 2 ? 1.05 : 1;
@@ -46,7 +46,7 @@ export default function Dock({ items }: DockProps) {
               className="relative group"
             >
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-200 ${
+                className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-colors duration-200 ${
                   item.active
                     ? "bg-primary/20 border border-primary/40 text-primary"
                     : "bg-secondary/60 border border-border/30 text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -76,7 +76,7 @@ export default function Dock({ items }: DockProps) {
               whileTap={{ scale: 0.95 }}
               className="relative group"
             >
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary/60 border border-border/30 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-200">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center bg-secondary/60 border border-border/30 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-200">
                 {themeItem.icon}
               </div>
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
