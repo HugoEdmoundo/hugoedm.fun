@@ -18,7 +18,7 @@ export default function ProjectsWindow({ projects }: ProjectsWindowProps) {
 
   return (
     <div className="p-4">
-      <BentoGrid className="grid-cols-1 md:grid-cols-2">
+      <BentoGrid className="grid-cols-1 sm:grid-cols-2">
         {projects.map((project, i) => (
           <BentoCard key={project.id} delay={i * 0.05}>
             {project.screenshot_url && (
