@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchSiteConfig, updateSiteConfig, uploadMedia } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Upload, Sparkles } from "lucide-react";
+import { Save, Upload, Sparkles, Globe, Type, Link2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AdminSiteConfig() {
   const queryClient = useQueryClient();
@@ -45,25 +46,27 @@ export default function AdminSiteConfig() {
     }
   };
 
-  if (isLoading) return <div className="text-muted-foreground text-sm">Loading...</div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
-  const sections: {
-    title: string;
-    description: string;
-    fields: { key: string; label: string; type?: string; uploadable?: boolean; placeholder?: string }[];
-  }[] = [
+  const sections = [
     {
       title: "Brand Identity",
-      description: "Atur nama situs, deskripsi, dan visual utama.",
+      description: "Nama situs, deskripsi, dan visual utama.",
+      icon: Globe,
       fields: [
         { key: "site_name", label: "Site Name" },
-        { key: "description", label: "Tagline / Description", placeholder: "Short intro on hero section" },
+        { key: "description", label: "Tagline / Description", placeholder: "Short intro" },
         { key: "favicon_url", label: "Favicon URL", uploadable: true },
       ],
     },
     {
       title: "Hero Content",
-      description: "Konten utama yang muncul pertama kali di landing page.",
+      description: "Konten utama landing page.",
+      icon: Type,
       fields: [
         { key: "hero_name", label: "Hero Name" },
         { key: "hero_headline", label: "Hero Headline" },
@@ -73,36 +76,38 @@ export default function AdminSiteConfig() {
     },
     {
       title: "Links & CTA",
-      description: "Tautan penting termasuk tombol marketplace.",
+      description: "Tautan penting dan marketplace CTA.",
+      icon: Link2,
       fields: [
         { key: "github_username", label: "GitHub Username" },
         { key: "cv_url", label: "CV / Resume URL", uploadable: true },
-        { key: "marketplace_cta_text", label: "Marketplace CTA Text", placeholder: "Visit Marketplace" },
-        { key: "marketplace_cta_url", label: "Marketplace CTA URL", placeholder: "https://..." },
+        { key: "marketplace_cta_text", label: "CTA Text", placeholder: "Visit Marketplace" },
+        { key: "marketplace_cta_url", label: "CTA URL", placeholder: "https://..." },
       ],
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="glass-card p-5 md:p-6 border border-primary/20">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary" />
+      {sections.map((section, sIdx) => (
+        <motion.div
+          key={section.title}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: sIdx * 0.08 }}
+          className="glass-card p-5 md:p-6 space-y-5 border border-border/30 hover:border-primary/15 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <section.icon className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">{section.title}</h3>
+              <p className="text-[11px] text-muted-foreground">{section.description}</p>
+            </div>
           </div>
-          <h2 className="text-xl font-bold">Site Configuration</h2>
-        </div>
-        <p className="text-sm text-muted-foreground">Semua update di sini langsung memengaruhi landing page dan elemen branding.</p>
-      </div>
 
-      {sections.map((section) => (
-        <div key={section.title} className="glass-card p-5 md:p-6 space-y-5">
-          <div>
-            <h3 className="font-semibold text-base">{section.title}</h3>
-            <p className="text-xs text-muted-foreground mt-1">{section.description}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {section.fields.map((field) => (
               <div key={field.key} className={field.type === "textarea" ? "md:col-span-2" : ""}>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{field.label}</label>
@@ -111,44 +116,41 @@ export default function AdminSiteConfig() {
                     <textarea
                       value={(values as any)[field.key]}
                       onChange={(e) => setForm((f) => ({ ...f, [field.key]: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg bg-secondary/70 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[120px] resize-y"
+                      className="w-full px-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 min-h-[120px] resize-y transition-all"
                       placeholder={field.placeholder}
                     />
                   ) : (
                     <input
                       value={(values as any)[field.key]}
                       onChange={(e) => setForm((f) => ({ ...f, [field.key]: e.target.value }))}
-                      className="flex-1 px-3 py-2 rounded-lg bg-secondary/70 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      className="flex-1 px-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                       placeholder={field.placeholder}
                     />
                   )}
-
                   {field.uploadable && (
-                    <label className="shrink-0 px-3 py-2 rounded-lg bg-secondary border border-border text-sm cursor-pointer hover:bg-muted transition-colors flex items-center gap-1.5">
+                    <label className="shrink-0 px-3 py-2.5 rounded-xl bg-secondary/70 border border-border/50 text-sm cursor-pointer hover:bg-muted transition-colors flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
-                      <span className="text-xs">Upload</span>
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => e.target.files?.[0] && handleUpload(field.key, e.target.files[0])}
-                      />
+                      <span className="hidden sm:inline text-xs">Upload</span>
+                      <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(field.key, e.target.files[0])} />
                     </label>
                   )}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       ))}
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
-        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity shadow-lg shadow-primary/20"
       >
         <Save className="w-4 h-4" />
-        {mutation.isPending ? "Saving..." : "Save Settings"}
-      </button>
+        {mutation.isPending ? "Saving..." : "Save All Settings"}
+      </motion.button>
     </div>
   );
 }

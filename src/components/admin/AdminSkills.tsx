@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchSkills, upsertSkill, deleteSkill, type Skill } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, X, Search, Check } from "lucide-react";
+import { Plus, Trash2, X, Search, Check, Palette } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const PREDEFINED_SKILLS = [
-  // Languages
   { name: "JavaScript", category: "Languages", icon: "Code" },
   { name: "TypeScript", category: "Languages", icon: "Code" },
   { name: "Python", category: "Languages", icon: "Code" },
@@ -31,7 +31,6 @@ const PREDEFINED_SKILLS = [
   { name: "CSS", category: "Languages", icon: "Palette" },
   { name: "Sass/SCSS", category: "Languages", icon: "Palette" },
   { name: "Shell/Bash", category: "Languages", icon: "Terminal" },
-  // Frameworks & Libraries
   { name: "React", category: "Frameworks", icon: "Atom" },
   { name: "Next.js", category: "Frameworks", icon: "Globe" },
   { name: "Vue.js", category: "Frameworks", icon: "Globe" },
@@ -58,7 +57,6 @@ const PREDEFINED_SKILLS = [
   { name: "Chakra UI", category: "Frameworks", icon: "Layout" },
   { name: "Framer Motion", category: "Frameworks", icon: "Move" },
   { name: "Three.js", category: "Frameworks", icon: "Box" },
-  // Databases
   { name: "PostgreSQL", category: "Databases", icon: "Database" },
   { name: "MySQL", category: "Databases", icon: "Database" },
   { name: "MongoDB", category: "Databases", icon: "Database" },
@@ -69,7 +67,6 @@ const PREDEFINED_SKILLS = [
   { name: "Prisma", category: "Databases", icon: "Database" },
   { name: "DynamoDB", category: "Databases", icon: "Database" },
   { name: "Elasticsearch", category: "Databases", icon: "Search" },
-  // DevOps & Tools
   { name: "Docker", category: "DevOps & Tools", icon: "Container" },
   { name: "Kubernetes", category: "DevOps & Tools", icon: "Network" },
   { name: "AWS", category: "DevOps & Tools", icon: "Cloud" },
@@ -83,7 +80,6 @@ const PREDEFINED_SKILLS = [
   { name: "CI/CD", category: "DevOps & Tools", icon: "RefreshCw" },
   { name: "Linux", category: "DevOps & Tools", icon: "Terminal" },
   { name: "Terraform", category: "DevOps & Tools", icon: "Blocks" },
-  // Other
   { name: "GraphQL", category: "Other", icon: "Share2" },
   { name: "REST API", category: "Other", icon: "Link" },
   { name: "WebSocket", category: "Other", icon: "Radio" },
@@ -108,22 +104,24 @@ export default function AdminSkills() {
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState("");
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail?.tab === "skills") setShowPicker(true);
+    };
+    window.addEventListener("admin-fab-add", handler);
+    return () => window.removeEventListener("admin-fab-add", handler);
+  }, []);
+
   const addMutation = useMutation({
     mutationFn: (s: { name: string; category: string; icon: string }) =>
       upsertSkill({ name: s.name, category: s.category, icon: s.icon, sort_order: skills.length }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
-      toast({ title: "Skill added!" });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); toast({ title: "Skill added!" }); },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteSkill,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skills"] });
-      toast({ title: "Deleted" });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); toast({ title: "Deleted" }); },
   });
 
   const existingNames = useMemo(() => new Set(skills.map((s) => s.name.toLowerCase())), [skills]);
@@ -144,81 +142,115 @@ export default function AdminSkills() {
     return cats;
   }, [filtered]);
 
+  // Group existing skills by category
+  const skillsByCategory = useMemo(() => {
+    const cats: Record<string, Skill[]> = {};
+    skills.forEach((s) => {
+      const cat = s.category || "Other";
+      if (!cats[cat]) cats[cat] = [];
+      cats[cat].push(s);
+    });
+    return cats;
+  }, [skills]);
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">Skills</h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <Palette className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">Skills</h2>
+            <p className="text-xs text-muted-foreground">{skills.length} selected</p>
+          </div>
+        </div>
         <button
           onClick={() => setShowPicker(!showPicker)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
         >
           {showPicker ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           {showPicker ? "Close" : "Add Skills"}
         </button>
       </div>
 
-      {showPicker && (
-        <div className="glass-card p-4 mb-6">
-          <div className="relative mb-4">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search skills..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-lg bg-secondary border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-          <div className="max-h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
-            {Object.entries(categories).map(([cat, items]) => (
-              <div key={cat}>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{cat}</p>
-                <div className="flex flex-wrap gap-2">
-                  {items.map((skill) => {
-                    const added = existingNames.has(skill.name.toLowerCase());
-                    return (
-                      <button
-                        key={skill.name}
-                        disabled={added || addMutation.isPending}
-                        onClick={() => addMutation.mutate(skill)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
-                          added
-                            ? "bg-primary/15 border-primary/30 text-primary cursor-default"
-                            : "bg-secondary/50 border-border/30 hover:border-primary/50 hover:bg-primary/10 cursor-pointer"
-                        }`}
-                      >
-                        {added && <Check className="w-3 h-3" />}
-                        {skill.name}
-                      </button>
-                    );
-                  })}
-                </div>
+      <AnimatePresence>
+        {showPicker && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+            <div className="glass-card p-4 md:p-5 border border-primary/15">
+              <div className="relative mb-4">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search skills..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+                />
               </div>
+              <div className="max-h-[350px] overflow-y-auto space-y-4 custom-scrollbar">
+                {Object.entries(categories).map(([cat, items]) => (
+                  <div key={cat}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{cat}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {items.map((skill) => {
+                        const added = existingNames.has(skill.name.toLowerCase());
+                        return (
+                          <button
+                            key={skill.name}
+                            disabled={added || addMutation.isPending}
+                            onClick={() => addMutation.mutate(skill)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
+                              added
+                                ? "bg-primary/10 border-primary/20 text-primary cursor-default"
+                                : "bg-secondary/40 border-border/20 hover:border-primary/30 hover:bg-primary/5 cursor-pointer"
+                            }`}
+                          >
+                            {added && <Check className="w-3 h-3" />}
+                            {skill.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {filtered.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No skills found</p>}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Display skills by category as cards */}
+      {Object.entries(skillsByCategory).map(([cat, catSkills]) => (
+        <div key={cat}>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{cat}</p>
+          <div className="flex flex-wrap gap-2">
+            {catSkills.map((s) => (
+              <motion.div
+                key={s.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card px-3 py-2 flex items-center gap-2 group hover:border-primary/15 transition-all"
+              >
+                <span className="text-sm font-medium">{s.name}</span>
+                <button
+                  onClick={() => { if (confirm("Delete?")) deleteMutation.mutate(s.id); }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-3 h-3 text-destructive/70" />
+                </button>
+              </motion.div>
             ))}
-            {filtered.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">No skills found matching "{search}"</p>
-            )}
           </div>
         </div>
+      ))}
+      {skills.length === 0 && !showPicker && (
+        <div className="text-center py-12">
+          <Palette className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">No skills yet. Click "Add Skills" to pick from the list.</p>
+        </div>
       )}
-
-      <div className="space-y-2">
-        {skills.map((s) => (
-          <div key={s.id} className="glass-card p-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{s.name}</span>
-              <span className="text-xs text-muted-foreground">({s.category})</span>
-            </div>
-            <button
-              onClick={() => { if (confirm("Delete?")) deleteMutation.mutate(s.id); }}
-              className="text-xs px-2 py-1 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          </div>
-        ))}
-        {skills.length === 0 && <p className="text-sm text-muted-foreground">No skills yet. Click "Add Skills" to pick from the list.</p>}
-      </div>
     </div>
   );
 }
