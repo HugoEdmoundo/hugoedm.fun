@@ -270,7 +270,7 @@ const Index = () => {
           className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[2]"
         >
           <motion.p
-            className="text-primary font-mono text-xs mb-4 tracking-[0.3em] uppercase"
+            className="text-primary font-mono text-xs mb-4 tracking-[0.3em] uppercase text-center px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -278,16 +278,16 @@ const Index = () => {
             {config?.description || "Welcome to my workspace"}
           </motion.p>
           <motion.h1
-            className="text-5xl md:text-7xl lg:text-8xl font-bold gradient-text tracking-tight mb-4"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold gradient-text tracking-tight mb-4 text-center px-4"
             animate={{ opacity: [0.6, 1, 0.6] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
             {config?.hero_name || "Welcome"}
           </motion.h1>
-          <p className="text-muted-foreground text-sm md:text-base font-light max-w-md text-center mb-2">
+          <p className="text-muted-foreground text-sm md:text-base font-light max-w-md text-center px-6 mb-2">
             {config?.hero_headline || "Architecting Code, Engineering Businesses."}
           </p>
-          <p className="text-muted-foreground/40 text-xs font-mono mt-4">
+          <p className="text-muted-foreground/40 text-xs font-mono mt-4 text-center">
             Click an icon or press ⌘K to explore
           </p>
         </motion.div>
