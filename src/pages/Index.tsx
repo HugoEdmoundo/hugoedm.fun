@@ -3,7 +3,6 @@ import { useCallback, useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
-  FolderOpen,
   Palette,
   Image,
   GraduationCap,
@@ -32,7 +31,6 @@ import GalleryWindow from "@/components/os/GalleryWindow";
 import JourneyWindow from "@/components/os/JourneyWindow";
 import TasksWindow from "@/components/os/TasksWindow";
 import CommandPalette from "@/components/os/CommandPalette";
-import FloatingCode from "@/components/os/FloatingCode";
 
 const Index = () => {
   const { data: config } = useQuery({ queryKey: ["site-config"], queryFn: fetchSiteConfig });
@@ -87,7 +85,6 @@ const Index = () => {
   }, []);
 
   const isMobile = window.innerWidth < 768;
-
   const getCenter = useCallback((w: number, h: number) => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -194,35 +191,6 @@ const Index = () => {
 
   return (
     <div className={`h-screen w-screen relative overflow-hidden select-none transition-colors duration-700 ${easterEgg ? "bg-[hsl(220,20%,97%)] dark:bg-[hsl(220,20%,8%)]" : "bg-background"}`}>
-      {/* Atmospheric background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 grid-pattern opacity-[0.07]" />
-        {/* Interactive mesh gradient blobs */}
-        <motion.div
-          animate={{ x: [0, 40, -30, 0], y: [0, -30, 20, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[5%] left-[10%] w-[600px] h-[600px] bg-primary/[0.07] rounded-full blur-[180px]"
-        />
-        <motion.div
-          animate={{ x: [0, -35, 25, 0], y: [0, 25, -15, 0] }}
-          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[10%] right-[5%] w-[500px] h-[500px] bg-[hsl(260,60%,50%)]/[0.05] rounded-full blur-[160px]"
-        />
-        <motion.div
-          animate={{ x: [0, 20, -15, 0], y: [0, -15, 25, 0] }}
-          transition={{ duration: 35, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[40%] left-[50%] w-[400px] h-[400px] bg-[hsl(210,70%,40%)]/[0.04] rounded-full blur-[140px]"
-        />
-        {/* Rotating ring */}
-        <motion.div
-          animate={{ rotate: [0, 360] }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[25%] right-[20%] w-[350px] h-[350px] border border-primary/[0.06] rounded-full"
-        />
-        {/* Floating code snippets */}
-        <FloatingCode />
-      </div>
-
       {/* Noise overlay */}
       <div className="absolute inset-0 noise-overlay pointer-events-none" />
 
@@ -247,8 +215,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Desktop icons */}
-      <div className="absolute top-12 left-2 md:left-8 flex flex-row flex-wrap md:flex-col gap-0 md:gap-1 z-[3] max-w-[calc(100vw-16px)] md:max-w-none">
+      {/* Desktop icons — hidden on mobile, use Dock instead */}
+      <div className="absolute top-12 left-8 hidden md:flex flex-col gap-1 z-[3]">
         {desktopIcons.map((icon, i) => (
           <DesktopIcon
             key={icon.id}
@@ -267,7 +235,7 @@ const Index = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 0.5 }}
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[2]"
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[2] pb-24 md:pb-0"
         >
           <motion.p
             className="text-primary font-mono text-xs mb-4 tracking-[0.3em] uppercase text-center px-4"

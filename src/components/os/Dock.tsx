@@ -16,8 +16,8 @@ interface DockProps {
 // Liquid blob that flows to the active item
 function LiquidBlob({ activeIndex, itemCount }: { activeIndex: number | null; itemCount: number }) {
   if (activeIndex === null) return null;
-  // Each item is ~52px wide on mobile, ~56px on desktop
-  const itemW = 52;
+  // Each item is ~48px wide (40px icon + 8px padding)
+  const itemW = 48;
   const blobX = activeIndex * itemW + itemW / 2;
 
   return (
@@ -68,12 +68,12 @@ export default function Dock({ items }: DockProps) {
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.8, type: "spring", stiffness: 260, damping: 22 }}
-      className="fixed bottom-5 left-0 right-0 flex justify-center z-50 pointer-events-none"
+      className="fixed bottom-5 left-0 right-0 flex justify-center z-50 pointer-events-none px-4"
     >
       {/* Floating island container */}
       <div
-        className="liquid-glass-dock relative flex items-end gap-0 px-2 py-2 overflow-visible pointer-events-auto"
-        style={{ borderRadius: 26 }}
+        className="liquid-glass-dock relative flex items-end gap-0 px-2 py-2 pointer-events-auto overflow-x-auto max-w-[calc(100vw-32px)]"
+        style={{ borderRadius: 26, scrollbarWidth: "none" }}
       >
         {/* Liquid blob layer — sits behind icons */}
         <LiquidBlob activeIndex={activeIndex >= 0 ? activeIndex : null} itemCount={allItems.length} />
@@ -110,7 +110,7 @@ export default function Dock({ items }: DockProps) {
               >
                 {/* Icon wrapper */}
                 <div
-                  className="w-[44px] h-[44px] md:w-[48px] md:h-[48px] rounded-[13px] flex items-center justify-center relative z-10 transition-colors duration-200"
+                  className="w-[40px] h-[40px] md:w-[48px] md:h-[48px] rounded-[13px] flex items-center justify-center relative z-10 transition-colors duration-200"
                   style={{
                     color: item.active
                       ? "hsl(174 72% 46%)"
