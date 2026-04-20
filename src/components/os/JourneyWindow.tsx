@@ -14,6 +14,21 @@ export default function JourneyWindow({ config, education, experience }: Journey
   const scrollRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
+  // Desktop horizontal-scroll wheel binding (must be top-level for hooks rules)
+  useEffect(() => {
+    if (bp !== "desktop") return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, [bp]);
+
   const slides = [
     {
       type: "intro" as const,
@@ -117,26 +132,13 @@ export default function JourneyWindow({ config, education, experience }: Journey
     );
   }
 
-  // ─── DESKTOP: horizontal cinematic scroll (original) ──────────────
+  // ─── DESKTOP: horizontal cinematic scroll ─────────────────────────
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const maxScroll = el.scrollWidth - el.clientWidth;
     setProgress(maxScroll > 0 ? el.scrollLeft / maxScroll : 0);
   };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handler = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY;
-      }
-    };
-    el.addEventListener("wheel", handler, { passive: false });
-    return () => el.removeEventListener("wheel", handler);
-  }, []);
 
   return (
     <div className="h-full flex flex-col">
