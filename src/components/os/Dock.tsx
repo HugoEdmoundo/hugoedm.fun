@@ -144,7 +144,8 @@ export default function Dock({ items }: DockProps) {
                   )}
                 </AnimatePresence>
 
-                {/* Tooltip */}
+                {/* Tooltip — disabled on touch */}
+                {!isTouch && (
                 <div className="absolute -top-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
                   <div
                     className="px-2 py-1 text-[10px] font-medium whitespace-nowrap text-foreground rounded-lg"
