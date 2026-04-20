@@ -17,14 +17,24 @@ interface DockProps {
 // Liquid blob that flows to the active item
 function LiquidBlob({ activeIndex, itemCount }: { activeIndex: number | null; itemCount: number }) {
   if (activeIndex === null) return null;
-  // Each item is ~48px wide (40px icon + 8px padding)
-  const itemW = 48;
+  // Responsive item width calculation
+  const getItemWidth = () => {
+    if (typeof window !== "undefined") {
+      if (window.innerWidth < 768) return 52; // Mobile: 44px icon + 8px gap
+      if (window.innerWidth < 1024) return 60; // Tablet: 52px icon + 8px gap
+      return 68; // Desktop: 60px icon + 8px gap
+    }
+    return 68;
+  };
+  
+  const itemW = getItemWidth();
   const blobX = activeIndex * itemW + itemW / 2;
+  const blobSize = typeof window !== "undefined" && window.innerWidth < 768 ? 40 : 48;
 
   return (
     <motion.div
-      className="absolute bottom-1 pointer-events-none"
-      style={{ left: blobX - 22, width: 44, height: 44 }}
+      className="absolute bottom-1.5 pointer-events-none"
+      style={{ left: blobX - blobSize/2, width: blobSize, height: blobSize }}
       layoutId="liquid-blob"
       transition={{ type: "spring", stiffness: 380, damping: 28 }}
     >
@@ -70,12 +80,12 @@ export default function Dock({ items }: DockProps) {
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.8, type: "spring", stiffness: 260, damping: 22 }}
-      className="fixed bottom-5 left-0 right-0 flex justify-center z-50 pointer-events-none px-4"
+      className="fixed bottom-4 md:bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none px-2 md:px-4"
     >
       {/* Floating island container */}
       <div
-        className="liquid-glass-dock relative flex items-end gap-0 px-2 py-2 pointer-events-auto overflow-x-auto max-w-[calc(100vw-32px)]"
-        style={{ borderRadius: 26, scrollbarWidth: "none" }}
+        className="liquid-glass-dock relative flex items-center gap-2 md:gap-3 px-2 md:px-4 py-2 md:py-3 pointer-events-auto"
+        style={{ borderRadius: 20 }}
       >
         {/* Liquid blob layer — sits behind icons */}
         <LiquidBlob activeIndex={activeIndex >= 0 ? activeIndex : null} itemCount={allItems.length} />
@@ -90,68 +100,62 @@ export default function Dock({ items }: DockProps) {
           const hoverY = distance === 0 ? -10 : distance === 1 ? -4 : 0;
 
           return (
-            <div key={item.id} className="flex items-end">
-              {isFirstTheme && (
-                <div
-                  className="self-center mx-1 w-px h-6 rounded-full"
-                  style={{ background: "rgba(255,255,255,0.18)" }}
-                />
-              )}
-              <motion.button
-                onHoverStart={() => !isTouch && setHoveredIndex(i)}
-                onHoverEnd={() => !isTouch && setHoveredIndex(null)}
-                onPointerLeave={() => setHoveredIndex(null)}
-                onPointerCancel={() => setHoveredIndex(null)}
-                onTouchEnd={() => setHoveredIndex(null)}
-                onClick={() => {
-                  item.onClick();
-                  if (isTouch) setHoveredIndex(null);
+            <motion.button
+              key={item.id}
+              onHoverStart={() => !isTouch && setHoveredIndex(i)}
+              onHoverEnd={() => !isTouch && setHoveredIndex(null)}
+              onPointerLeave={() => setHoveredIndex(null)}
+              onPointerCancel={() => setHoveredIndex(null)}
+              onTouchEnd={() => setHoveredIndex(null)}
+              onClick={() => {
+                item.onClick();
+                if (isTouch) setHoveredIndex(null);
+              }}
+              animate={{
+                scale: !isTouch && hoveredIndex !== null ? hoverScale : 1,
+                y: !isTouch && hoveredIndex !== null ? hoverY : 0,
+              }}
+              whileTap={{ scale: 0.88 }}
+              transition={{ type: "spring", stiffness: 420, damping: 20 }}
+              className="relative group"
+              aria-label={item.label}
+            >
+              {/* Icon wrapper */}
+              <div
+                className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-[12px] md:rounded-[13px] flex items-center justify-center relative z-10 transition-colors duration-200"
+                style={{
+                  color: item.active
+                    ? "hsl(174 72% 46%)"
+                    : "hsl(var(--muted-foreground))",
                 }}
-                animate={{
-                  scale: !isTouch && hoveredIndex !== null ? hoverScale : 1,
-                  y: !isTouch && hoveredIndex !== null ? hoverY : 0,
-                }}
-                whileTap={{ scale: 0.88 }}
-                transition={{ type: "spring", stiffness: 420, damping: 20 }}
-                className="relative group"
-                aria-label={item.label}
               >
-                {/* Icon wrapper */}
-                <div
-                  className="w-[40px] h-[40px] md:w-[48px] md:h-[48px] rounded-[13px] flex items-center justify-center relative z-10 transition-colors duration-200"
-                  style={{
-                    color: item.active
-                      ? "hsl(174 72% 46%)"
-                      : "hsl(var(--muted-foreground))",
-                  }}
+                {/* Outline-to-filled icon micro-interaction */}
+                <motion.span
+                  animate={{ opacity: 1, scale: item.active ? 1.08 : 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                  className="flex items-center justify-center w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7"
                 >
-                  {/* Outline-to-filled icon micro-interaction */}
-                  <motion.span
-                    animate={{ opacity: 1, scale: item.active ? 1.08 : 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                    className="flex items-center justify-center"
-                  >
-                    {item.icon}
-                  </motion.span>
-                </div>
+                  {item.icon}
+                </motion.span>
+              </div>
 
-                {/* Active dot */}
-                <AnimatePresence>
-                  {item.active && (
-                    <motion.div
-                      key="dot"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                      className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                      style={{ boxShadow: "0 0 6px hsl(174 72% 46% / 0.8)" }}
-                    />
-                  )}
-                </AnimatePresence>
+              {/* Active dot */}
+              <AnimatePresence>
+                {item.active && (
+                  <motion.div
+                    key="dot"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                    style={{ boxShadow: "0 0 6px hsl(174 72% 46% / 0.8)" }}
+                  />
+                )}
+              </AnimatePresence>
 
-                {/* Tooltip — disabled on touch */}
-                {!isTouch && (
+              {/* Tooltip — disabled on touch */}
+              {!isTouch && (
                 <div className="absolute -top-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
                   <div
                     className="px-2 py-1 text-[10px] font-medium whitespace-nowrap text-foreground rounded-lg"
@@ -165,9 +169,8 @@ export default function Dock({ items }: DockProps) {
                     {item.label}
                   </div>
                 </div>
-                )}
-              </motion.button>
-            </div>
+              )}
+            </motion.button>
           );
         })}
       </div>

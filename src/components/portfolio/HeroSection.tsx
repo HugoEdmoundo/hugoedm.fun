@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Download, Store, ArrowUpRight, icons } from "lucide-react";
+import { FileText, Store, ArrowUpRight, icons } from "lucide-react";
 import type { SiteConfig } from "@/lib/api";
 import { useRef } from "react";
 
@@ -101,7 +101,7 @@ export default function HeroSection({ config, socialLinks = [] }: HeroSectionPro
 
           {config?.cv_url && (
             <motion.a
-              href={config.cv_url}
+              href={`https://docs.google.com/viewer?url=${encodeURIComponent(config.cv_url)}&embedded=true`}
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, scale: 0 }}
@@ -111,8 +111,8 @@ export default function HeroSection({ config, socialLinks = [] }: HeroSectionPro
               whileTap={{ scale: 0.96 }}
               className="glass-card px-6 py-3.5 text-sm font-semibold text-primary flex items-center gap-2 hover:border-primary/30 transition-colors"
             >
-              <Download className="w-4 h-4" />
-              Download CV
+              <FileText className="w-4 h-4" />
+              View CV
             </motion.a>
           )}
 
