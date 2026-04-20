@@ -100,7 +100,13 @@ export default function Dock({ items }: DockProps) {
               <motion.button
                 onHoverStart={() => !isTouch && setHoveredIndex(i)}
                 onHoverEnd={() => !isTouch && setHoveredIndex(null)}
-                onClick={item.onClick}
+                onPointerLeave={() => setHoveredIndex(null)}
+                onPointerCancel={() => setHoveredIndex(null)}
+                onTouchEnd={() => setHoveredIndex(null)}
+                onClick={() => {
+                  item.onClick();
+                  if (isTouch) setHoveredIndex(null);
+                }}
                 animate={{
                   scale: !isTouch && hoveredIndex !== null ? hoverScale : 1,
                   y: !isTouch && hoveredIndex !== null ? hoverY : 0,
