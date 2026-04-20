@@ -159,6 +159,7 @@ export default function Dock({ items }: DockProps) {
                     {item.label}
                   </div>
                 </div>
+                )}
               </motion.button>
             </div>
           );
