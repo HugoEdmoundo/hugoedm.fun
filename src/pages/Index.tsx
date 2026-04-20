@@ -31,8 +31,11 @@ import GalleryWindow from "@/components/os/GalleryWindow";
 import JourneyWindow from "@/components/os/JourneyWindow";
 import TasksWindow from "@/components/os/TasksWindow";
 import CommandPalette from "@/components/os/CommandPalette";
+import ParallaxBackground from "@/components/os/ParallaxBackground";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 
 const Index = () => {
+  const bp = useBreakpoint();
   const { data: config } = useQuery({ queryKey: ["site-config"], queryFn: fetchSiteConfig });
   const { data: projects } = useQuery({ queryKey: ["projects"], queryFn: fetchProjects });
   const { data: skills } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
@@ -89,13 +92,20 @@ const Index = () => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     if (vw < 768) {
+      // Mobile — almost full screen
       return { x: 4, y: 36, width: vw - 8, height: vh - 110 };
+    }
+    if (vw < 1024) {
+      // Tablet — large window centered
+      const tw = Math.min(w + 80, vw - 40);
+      const th = Math.min(h + 40, vh - 140);
+      return { x: (vw - tw) / 2, y: 48, width: tw, height: th };
     }
     return {
       x: Math.max(40, (vw - w) / 2 + (Math.random() - 0.5) * 80),
       y: Math.max(40, (vh - h) / 2 + (Math.random() - 0.5) * 60 - 40),
     };
-  }, []);
+  }, [bp]);
 
   const openProfile = useCallback(() => {
     const pos = getCenter(420, 560);
@@ -191,6 +201,8 @@ const Index = () => {
 
   return (
     <div className={`h-screen w-screen relative overflow-hidden select-none transition-colors duration-700 ${easterEgg ? "bg-[hsl(220,20%,97%)] dark:bg-[hsl(220,20%,8%)]" : "bg-background"}`}>
+      {/* Parallax background */}
+      <ParallaxBackground />
       {/* Noise overlay */}
       <div className="absolute inset-0 noise-overlay pointer-events-none" />
 
