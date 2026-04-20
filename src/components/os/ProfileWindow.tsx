@@ -1,17 +1,28 @@
-import { Download, Store, ArrowUpRight, FileText, icons } from "lucide-react";
+import { useState } from "react";
+import { Store, ArrowUpRight, FileText, icons } from "lucide-react";
 import type { SiteConfig } from "@/lib/api";
 import { BentoCard, BentoGrid } from "./BentoGrid";
 import { useGitHubRepos } from "@/lib/github";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
+import Lightbox from "./Lightbox";
 
 interface ProfileWindowProps {
   config: SiteConfig | null;
   socialLinks?: { id: string; platform: string; url: string; icon: string }[];
 }
 
+// Ensure URL has scheme so target=_blank works (no relative interpretation)
+function normalizeUrl(url: string): string {
+  const u = url.trim();
+  if (!u) return "#";
+  if (/^(https?:|mailto:|tel:)/i.test(u)) return u;
+  return `https://${u}`;
+}
+
 export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindowProps) {
   const bp = useBreakpoint();
   const { data: repos } = useGitHubRepos(config?.github_username ?? undefined);
+  const [showPhoto, setShowPhoto] = useState(false);
   const marketplaceText = String((config as any)?.marketplace_cta_text ?? "Visit Marketplace").trim();
   const marketplaceUrl = String((config as any)?.marketplace_cta_url ?? "").trim();
 
@@ -21,9 +32,14 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
       <div className="relative z-10">
         {config?.hero_photo_url && (
-          <div className={`${bp === "mobile" ? "w-16 h-16" : "w-20 h-20"} mx-auto rounded-full overflow-hidden border-2 border-primary/30 ring-4 ring-primary/10 mb-3`}>
+          <button
+            type="button"
+            onClick={() => setShowPhoto(true)}
+            aria-label="View profile photo"
+            className={`${bp === "mobile" ? "w-16 h-16" : "w-20 h-20"} mx-auto rounded-full overflow-hidden border-2 border-primary/30 ring-4 ring-primary/10 mb-3 block cursor-zoom-in transition-transform hover:scale-105 active:scale-95`}
+          >
             <img src={config.hero_photo_url} alt="Profile" className="w-full h-full object-cover" />
-          </div>
+          </button>
         )}
         <h2 className={`${bp === "mobile" ? "text-xl" : "text-2xl"} font-bold gradient-text`}>
           {config?.hero_name || "Your Name"}
@@ -36,10 +52,10 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
     </BentoCard>
   );
 
-  // CV button — prominent
+  // CV button — opens in a new tab as a viewer (NOT download)
   const CvButton = config?.cv_url ? (
     <a
-      href={config.cv_url}
+      href={normalizeUrl(config.cv_url)}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all"
@@ -61,21 +77,33 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
     <BentoGrid className={bp === "mobile" ? "grid-cols-2" : bp === "tablet" ? "grid-cols-3" : "grid-cols-2"}>
       {socialLinks.map((link, i) => {
         const LucideIcon = (icons as any)[link.icon];
+        const href = normalizeUrl(link.url);
         return (
-          <BentoCard key={link.id} delay={0.2 + i * 0.04} className="flex items-center gap-3">
-            <a href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full group">
+          <BentoCard key={link.id} delay={0.2 + i * 0.04} className="flex items-center gap-3 p-0">
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 w-full group p-3"
+            >
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                 {LucideIcon ? <LucideIcon className="w-4 h-4 text-primary" /> : <span className="text-xs">{link.platform[0]}</span>}
               </div>
               <span className="text-xs font-medium truncate">{link.platform}</span>
+              <ArrowUpRight className="w-3 h-3 text-muted-foreground/60 ml-auto shrink-0 group-hover:text-primary transition-colors" />
             </a>
           </BentoCard>
         );
       })}
 
       {marketplaceUrl && (
-        <BentoCard delay={0.4} className="bg-primary/5 border-primary/15">
-          <a href={marketplaceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
+        <BentoCard delay={0.4} className="bg-primary/5 border-primary/15 p-0">
+          <a
+            href={normalizeUrl(marketplaceUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 group p-3"
+          >
             <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
               <Store className="w-4 h-4 text-primary" />
             </div>
@@ -101,48 +129,66 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
     </BentoCard>
   );
 
+  const PhotoLightbox = (
+    <Lightbox
+      src={showPhoto ? config?.hero_photo_url ?? null : null}
+      alt={config?.hero_name ?? "Profile"}
+      caption={config?.hero_name ?? undefined}
+      onClose={() => setShowPhoto(false)}
+    />
+  );
+
   // ─── DESKTOP: 2-column layout ────────────────────────────────────
   if (bp === "desktop") {
     return (
-      <div className="p-5 grid grid-cols-5 gap-4">
-        <div className="col-span-2 space-y-4">
-          {Hero}
-          {CvButton}
+      <>
+        <div className="p-5 grid grid-cols-5 gap-4">
+          <div className="col-span-2 space-y-4">
+            {Hero}
+            {CvButton}
+          </div>
+          <div className="col-span-3 space-y-4">
+            {About}
+            {SocialActions}
+            {ReposCard}
+          </div>
         </div>
-        <div className="col-span-3 space-y-4">
-          {About}
-          {SocialActions}
-          {ReposCard}
-        </div>
-      </div>
+        {PhotoLightbox}
+      </>
     );
   }
 
   // ─── TABLET: hero atas full, then 2-col actions ─────────────────
   if (bp === "tablet") {
     return (
-      <div className="p-4 space-y-4">
-        {Hero}
-        {CvButton}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-4">{About}</div>
-          <div className="space-y-4">
-            {SocialActions}
-            {ReposCard}
+      <>
+        <div className="p-4 space-y-4">
+          {Hero}
+          {CvButton}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">{About}</div>
+            <div className="space-y-4">
+              {SocialActions}
+              {ReposCard}
+            </div>
           </div>
         </div>
-      </div>
+        {PhotoLightbox}
+      </>
     );
   }
 
   // ─── MOBILE: stacked single column ───────────────────────────────
   return (
-    <div className="p-3 space-y-3">
-      {Hero}
-      {CvButton}
-      {About}
-      {SocialActions}
-      {ReposCard}
-    </div>
+    <>
+      <div className="p-3 space-y-3">
+        {Hero}
+        {CvButton}
+        {About}
+        {SocialActions}
+        {ReposCard}
+      </div>
+      {PhotoLightbox}
+    </>
   );
 }
