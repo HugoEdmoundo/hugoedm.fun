@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useIsTouchDevice } from "@/hooks/use-breakpoint";
 
 export interface DockItem {
   id: string;
@@ -56,6 +57,7 @@ function LiquidBlob({ activeIndex, itemCount }: { activeIndex: number | null; it
 
 export default function Dock({ items }: DockProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const isTouch = useIsTouchDevice();
 
   const mainItems = items.filter((i) => i.id !== "theme");
   const themeItem = items.find((i) => i.id === "theme");
@@ -82,7 +84,7 @@ export default function Dock({ items }: DockProps) {
         {allItems.map((item, i) => {
           const isTheme = item.id === "theme";
           const isFirstTheme = isTheme && mainItems.length > 0 && i === mainItems.length;
-          const distance = hoveredIndex !== null ? Math.abs(i - hoveredIndex) : 999;
+          const distance = !isTouch && hoveredIndex !== null ? Math.abs(i - hoveredIndex) : 999;
           const hoverScale =
             distance === 0 ? 1.38 : distance === 1 ? 1.16 : distance === 2 ? 1.05 : 1;
           const hoverY = distance === 0 ? -10 : distance === 1 ? -4 : 0;
@@ -96,12 +98,12 @@ export default function Dock({ items }: DockProps) {
                 />
               )}
               <motion.button
-                onHoverStart={() => setHoveredIndex(i)}
-                onHoverEnd={() => setHoveredIndex(null)}
+                onHoverStart={() => !isTouch && setHoveredIndex(i)}
+                onHoverEnd={() => !isTouch && setHoveredIndex(null)}
                 onClick={item.onClick}
                 animate={{
-                  scale: hoveredIndex !== null ? hoverScale : 1,
-                  y: hoveredIndex !== null ? hoverY : 0,
+                  scale: !isTouch && hoveredIndex !== null ? hoverScale : 1,
+                  y: !isTouch && hoveredIndex !== null ? hoverY : 0,
                 }}
                 whileTap={{ scale: 0.88 }}
                 transition={{ type: "spring", stiffness: 420, damping: 20 }}
@@ -142,7 +144,8 @@ export default function Dock({ items }: DockProps) {
                   )}
                 </AnimatePresence>
 
-                {/* Tooltip */}
+                {/* Tooltip — disabled on touch */}
+                {!isTouch && (
                 <div className="absolute -top-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none">
                   <div
                     className="px-2 py-1 text-[10px] font-medium whitespace-nowrap text-foreground rounded-lg"
@@ -156,6 +159,7 @@ export default function Dock({ items }: DockProps) {
                     {item.label}
                   </div>
                 </div>
+                )}
               </motion.button>
             </div>
           );

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { Education, Experience, SiteConfig } from "@/lib/api";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 
 interface JourneyWindowProps {
   config: SiteConfig | null;
@@ -9,8 +10,24 @@ interface JourneyWindowProps {
 }
 
 export default function JourneyWindow({ config, education, experience }: JourneyWindowProps) {
+  const bp = useBreakpoint();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
+
+  // Desktop horizontal-scroll wheel binding (must be top-level for hooks rules)
+  useEffect(() => {
+    if (bp !== "desktop") return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, [bp]);
 
   const slides = [
     {
@@ -46,25 +63,82 @@ export default function JourneyWindow({ config, education, experience }: Journey
     },
   ];
 
+  // ─── MOBILE: vertical timeline (lebih ramah jempol) ───────────────
+  if (bp === "mobile") {
+    return (
+      <div className="p-4 space-y-4">
+        <div className="relative pl-6">
+          <div className="absolute left-2 top-2 bottom-2 w-px bg-gradient-to-b from-primary via-primary/40 to-transparent" />
+          {slides.map((slide, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="relative pb-5"
+            >
+              <div className="absolute -left-[18px] top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-background" />
+              <div className="flex items-center gap-2 mb-1">
+                {"logoUrl" in slide && slide.logoUrl && (
+                  <div className="w-6 h-6 rounded bg-secondary/50 border border-border/30 overflow-hidden shrink-0">
+                    <img src={slide.logoUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <p className="text-[10px] font-mono text-primary tracking-widest uppercase">{slide.subtitle}</p>
+              </div>
+              <h3 className="text-base font-bold mb-1">{slide.title}</h3>
+              {"duration" in slide && slide.duration && (
+                <p className="text-[10px] text-muted-foreground/60 font-mono mb-1">{slide.duration}</p>
+              )}
+              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{slide.content}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── TABLET: 2-column compact card grid ───────────────────────────
+  if (bp === "tablet") {
+    return (
+      <div className="p-4 grid grid-cols-2 gap-3">
+        {slides.map((slide, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className="rounded-xl p-4 bg-card/50 border border-border/30 relative overflow-hidden"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-[0.05]`} />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                {"logoUrl" in slide && slide.logoUrl && (
+                  <div className="w-8 h-8 rounded-lg bg-secondary/50 border border-border/30 overflow-hidden shrink-0">
+                    <img src={slide.logoUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <p className="text-[10px] font-mono text-primary tracking-widest uppercase">{slide.subtitle}</p>
+              </div>
+              <h3 className="text-lg font-bold mb-1.5">{slide.title}</h3>
+              {"duration" in slide && slide.duration && (
+                <p className="text-[10px] text-muted-foreground/60 font-mono mb-1.5">{slide.duration}</p>
+              )}
+              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4">{slide.content}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
+  // ─── DESKTOP: horizontal cinematic scroll ─────────────────────────
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const el = scrollRef.current;
     const maxScroll = el.scrollWidth - el.clientWidth;
     setProgress(maxScroll > 0 ? el.scrollLeft / maxScroll : 0);
   };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handler = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        el.scrollLeft += e.deltaY;
-      }
-    };
-    el.addEventListener("wheel", handler, { passive: false });
-    return () => el.removeEventListener("wheel", handler);
-  }, []);
 
   return (
     <div className="h-full flex flex-col">
@@ -75,13 +149,8 @@ export default function JourneyWindow({ config, education, experience }: Journey
         style={{ scrollBehavior: "smooth" }}
       >
         {slides.map((slide, i) => (
-          <div
-            key={i}
-            className="min-w-full h-full snap-center flex items-center justify-center p-8 md:p-16 relative"
-          >
-            {/* Background accent */}
+          <div key={i} className="min-w-full h-full snap-center flex items-center justify-center p-16 relative">
             <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-[0.04] pointer-events-none`} />
-
             <motion.div
               initial={{ opacity: 0, x: 60 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -89,7 +158,6 @@ export default function JourneyWindow({ config, education, experience }: Journey
               transition={{ duration: 0.6 }}
               className="max-w-2xl w-full relative"
             >
-              {/* Type badge */}
               <div className="flex items-center gap-3 mb-6">
                 {"logoUrl" in slide && slide.logoUrl && (
                   <div className="w-14 h-14 rounded-xl bg-secondary/50 border border-border/30 overflow-hidden shrink-0">
@@ -97,21 +165,14 @@ export default function JourneyWindow({ config, education, experience }: Journey
                   </div>
                 )}
                 <div>
-                  <p className="text-primary font-mono text-xs tracking-[0.3em] uppercase">
-                    {slide.subtitle}
-                  </p>
+                  <p className="text-primary font-mono text-xs tracking-[0.3em] uppercase">{slide.subtitle}</p>
                   {"duration" in slide && slide.duration && (
                     <p className="text-muted-foreground/50 font-mono text-[10px] mt-0.5">{slide.duration}</p>
                   )}
                 </div>
               </div>
-
-              <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight leading-tight">{slide.title}</h2>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed whitespace-pre-wrap">
-                {slide.content}
-              </p>
-
-              {/* Slide counter */}
+              <h2 className="text-5xl font-bold mb-6 tracking-tight leading-tight">{slide.title}</h2>
+              <p className="text-muted-foreground text-lg leading-relaxed whitespace-pre-wrap">{slide.content}</p>
               <div className="mt-10 flex items-center gap-3">
                 <span className="text-xs text-muted-foreground/40 font-mono">
                   {String(i + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
@@ -125,15 +186,12 @@ export default function JourneyWindow({ config, education, experience }: Journey
           </div>
         ))}
       </div>
-
-      {/* Progress bar */}
       <div className="h-1.5 bg-secondary/20 shrink-0 relative">
         <motion.div
           className="h-full bg-gradient-to-r from-primary via-emerald-400 to-cyan-400 rounded-full"
           style={{ width: `${progress * 100}%` }}
           transition={{ type: "spring", damping: 30 }}
         />
-        {/* Step dots */}
         <div className="absolute inset-0 flex items-center justify-between px-2">
           {slides.map((_, i) => (
             <div
