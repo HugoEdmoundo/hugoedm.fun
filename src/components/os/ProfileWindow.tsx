@@ -52,16 +52,20 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
     </BentoCard>
   );
 
-  // CV button — opens in a new tab as a viewer (NOT download)
-  const CvButton = config?.cv_url ? (
+  // CV button — opens via Google Docs Viewer so it renders in browser, never downloads
+  const cvViewerUrl = config?.cv_url
+    ? `https://docs.google.com/viewer?url=${encodeURIComponent(normalizeUrl(config.cv_url))}&embedded=false`
+    : null;
+
+  const CvButton = cvViewerUrl ? (
     <a
-      href={normalizeUrl(config.cv_url)}
+      href={cvViewerUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-semibold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all"
     >
       <FileText className="w-4 h-4" />
-      Show CV
+      View CV
       <ArrowUpRight className="w-3.5 h-3.5 opacity-80" />
     </a>
   ) : null;

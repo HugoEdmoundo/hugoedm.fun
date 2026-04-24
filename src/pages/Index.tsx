@@ -227,8 +227,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Desktop icons — hidden on mobile, use Dock instead */}
-      <div className="absolute top-12 left-8 hidden md:flex flex-col gap-1 z-[3]">
+      {/* Desktop icons — visible on desktop only, Dock handles tablet/mobile */}
+      <div className="absolute top-12 left-8 hidden lg:flex flex-col gap-1 z-[3]">
         {desktopIcons.map((icon, i) => (
           <DesktopIcon
             key={icon.id}

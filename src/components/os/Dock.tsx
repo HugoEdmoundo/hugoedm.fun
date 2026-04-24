@@ -68,6 +68,11 @@ function LiquidBlob({ activeIndex, itemCount }: { activeIndex: number | null; it
 export default function Dock({ items }: DockProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const isTouch = useIsTouchDevice();
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+
+  // Hide dock entirely on desktop — use desktop icons instead
+  if (isDesktop) return null;
 
   const mainItems = items.filter((i) => i.id !== "theme");
   const themeItem = items.find((i) => i.id === "theme");
@@ -80,7 +85,7 @@ export default function Dock({ items }: DockProps) {
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.8, type: "spring", stiffness: 260, damping: 22 }}
-      className="fixed bottom-4 md:bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none px-2 md:px-4"
+      className="fixed bottom-4 md:bottom-6 left-0 right-0 hidden md:flex justify-center z-50 pointer-events-none px-2 md:px-4"
     >
       {/* Floating island container */}
       <div
