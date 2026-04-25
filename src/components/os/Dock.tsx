@@ -68,10 +68,9 @@ function LiquidBlob({ activeIndex, itemCount }: { activeIndex: number | null; it
 export default function Dock({ items }: DockProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const isTouch = useIsTouchDevice();
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
 
-  // Hide dock entirely on desktop — use desktop icons instead
+  // Hide dock on desktop — desktop icons + theme button handle navigation there
   if (isDesktop) return null;
 
   const mainItems = items.filter((i) => i.id !== "theme");
@@ -85,7 +84,7 @@ export default function Dock({ items }: DockProps) {
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.8, type: "spring", stiffness: 260, damping: 22 }}
-      className="fixed bottom-4 md:bottom-6 left-0 right-0 hidden md:flex justify-center z-50 pointer-events-none px-2 md:px-4"
+      className="fixed bottom-4 md:bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none px-2 md:px-4"
     >
       {/* Floating island container */}
       <div
@@ -130,7 +129,7 @@ export default function Dock({ items }: DockProps) {
                 className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-[12px] md:rounded-[13px] flex items-center justify-center relative z-10 transition-colors duration-200"
                 style={{
                   color: item.active
-                    ? "hsl(174 72% 46%)"
+                    ? "hsl(var(--primary))"
                     : "hsl(var(--muted-foreground))",
                 }}
               >
@@ -154,7 +153,7 @@ export default function Dock({ items }: DockProps) {
                     exit={{ scale: 0, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                     className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                    style={{ boxShadow: "0 0 6px hsl(174 72% 46% / 0.8)" }}
+                    style={{ boxShadow: "0 0 6px hsl(var(--primary) / 0.8)" }}
                   />
                 )}
               </AnimatePresence>

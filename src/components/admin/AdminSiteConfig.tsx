@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchSiteConfig, updateSiteConfig, uploadMedia } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Upload, Sparkles, Globe, Type, Link2 } from "lucide-react";
+import { Save, Upload, Sparkles, Globe, Type, Link2, ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function AdminSiteConfig() {
@@ -24,6 +24,8 @@ export default function AdminSiteConfig() {
     about_text: form.about_text ?? config?.about_text ?? "",
     marketplace_cta_text: form.marketplace_cta_text ?? (config as any)?.marketplace_cta_text ?? "Visit Marketplace",
     marketplace_cta_url: form.marketplace_cta_url ?? (config as any)?.marketplace_cta_url ?? "",
+    bg_day_url: form.bg_day_url ?? (config as any)?.bg_day_url ?? "",
+    bg_night_url: form.bg_night_url ?? (config as any)?.bg_night_url ?? "",
   };
 
   const mutation = useMutation({
@@ -85,6 +87,16 @@ export default function AdminSiteConfig() {
         { key: "marketplace_cta_url", label: "CTA URL", placeholder: "https://..." },
       ],
     },
+    {
+      title: "Background Images",
+      description: "Gambar latar siang dan malam untuk halaman utama.",
+      icon: ImageIcon,
+      fields: [
+        { key: "bg_day_url", label: "Background Siang (Day)", uploadable: true, placeholder: "https://..." },
+        { key: "bg_night_url", label: "Background Malam (Night)", uploadable: true, placeholder: "https://..." },
+      ],
+      previews: true,
+    },
   ];
 
   return (
@@ -131,10 +143,22 @@ export default function AdminSiteConfig() {
                     <label className="shrink-0 px-3 py-2.5 rounded-xl bg-secondary/70 border border-border/50 text-sm cursor-pointer hover:bg-muted transition-colors flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline text-xs">Upload</span>
-                      <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(field.key, e.target.files[0])} />
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(field.key, e.target.files[0])} />
                     </label>
                   )}
                 </div>
+                {/* Image preview for bg fields */}
+                {(section as any).previews && (values as any)[field.key] && (
+                  <div className="mt-2 rounded-xl overflow-hidden border border-border/30 h-28 relative">
+                    <img
+                      src={(values as any)[field.key]}
+                      alt={field.label}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-[10px] text-white/80 font-mono">{field.label}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

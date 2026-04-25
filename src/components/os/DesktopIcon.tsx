@@ -10,22 +10,54 @@ interface DesktopIconProps {
 export default function DesktopIcon({ icon, label, onClick, delay = 0 }: DesktopIconProps) {
   return (
     <motion.button
-      initial={{ opacity: 0, scale: 0.5, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay, type: "spring", damping: 15 }}
-      whileHover={{ scale: 1.08, y: -4 }}
-      whileTap={{ scale: 0.95 }}
+      initial={{ opacity: 0, x: -16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, type: "spring", damping: 18, stiffness: 200 }}
+      whileHover={{ scale: 1.12, x: 4 }}
+      whileTap={{ scale: 0.92 }}
       onClick={onClick}
       onDoubleClick={onClick}
-      className="flex flex-col items-center gap-1.5 md:gap-2 p-2 md:p-3 rounded-xl hover:bg-card/40 backdrop-blur-sm transition-colors group cursor-pointer select-none"
-      style={{ width: typeof window !== "undefined" && window.innerWidth < 768 ? 70 : 90 }}
+      aria-label={label}
+      title={label}
+      className="relative group flex items-center justify-center cursor-pointer select-none"
+      style={{ width: 52, height: 52 }}
     >
-      <div className="w-11 h-11 md:w-14 md:h-14 rounded-xl bg-card/60 backdrop-blur-xl border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300">
+      {/* Icon circle — solid, no blur, high contrast */}
+      <div
+        className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
+        style={{
+          background: "rgba(0,0,0,0.45)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
+          color: "rgba(255,255,255,0.92)",
+        }}
+      >
         {icon}
       </div>
-      <span className="text-[10px] md:text-[11px] font-medium text-foreground/80 leading-tight text-center group-hover:text-foreground transition-colors line-clamp-1">
-        {label}
-      </span>
+
+      {/* Tooltip on hover — appears to the right */}
+      <div className="absolute left-14 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50">
+        <div
+          className="px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap"
+          style={{
+            background: "rgba(0,0,0,0.75)",
+            color: "rgba(255,255,255,0.95)",
+            border: "0.5px solid rgba(255,255,255,0.15)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+        >
+          {label}
+        </div>
+        {/* Arrow */}
+        <div
+          className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-0 h-0"
+          style={{
+            borderTop: "4px solid transparent",
+            borderBottom: "4px solid transparent",
+            borderRight: "5px solid rgba(0,0,0,0.75)",
+          }}
+        />
+      </div>
     </motion.button>
   );
 }

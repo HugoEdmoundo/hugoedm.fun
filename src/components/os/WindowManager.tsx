@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { X, Minus, Maximize2, Minimize2 } from "lucide-react";
 
@@ -26,22 +26,22 @@ interface DraggableWindowProps {
 }
 
 function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDragEnd }: DraggableWindowProps) {
-  const constraintsRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 30 }}
+      initial={{ opacity: 0, scale: 0.88, y: 24 }}
       animate={{
         opacity: win.minimized ? 0 : 1,
-        scale: win.minimized ? 0.5 : 1,
-        y: win.minimized ? 100 : 0,
-        x: win.maximized ? 0 : undefined,
+        scale: win.minimized ? 0.85 : 1,
+        y: win.minimized ? 60 : 0,
+        left: win.maximized ? 0 : win.x,
+        top: win.maximized ? 32 : win.y,
         width: win.maximized ? "100vw" : win.width,
-        height: win.maximized ? "calc(100vh - 104px)" : win.height,
+        height: win.maximized ? "calc(100vh - 32px)" : win.height,
       }}
-      exit={{ opacity: 0, scale: 0.7, y: 40 }}
-      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      exit={{ opacity: 0, scale: 0.88, y: 24 }}
+      transition={{ type: "spring", damping: 26, stiffness: 300 }}
       drag={!win.maximized}
       dragControls={dragControls}
       dragMomentum={false}
@@ -54,15 +54,24 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       style={{
         left: win.maximized ? 0 : win.x,
         top: win.maximized ? 32 : win.y,
+        width: win.maximized ? "100vw" : win.width,
+        height: win.maximized ? "calc(100vh - 32px)" : win.height,
         zIndex: win.zIndex,
         display: win.minimized ? "none" : "flex",
         pointerEvents: "auto",
       }}
     >
-      <div className="flex flex-col h-full w-full rounded-xl overflow-hidden border border-border/40 bg-card/90 backdrop-blur-2xl shadow-2xl shadow-black/30">
+      <div
+        className="flex flex-col h-full w-full overflow-hidden bg-card/90 backdrop-blur-2xl shadow-2xl shadow-black/30"
+        style={{
+          borderRadius: win.maximized ? 0 : 12,
+          border: win.maximized ? "none" : "1px solid hsl(var(--border) / 0.4)",
+        }}
+      >
         {/* Title bar */}
         <div
-          className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 cursor-grab active:cursor-grabbing select-none shrink-0"
+          className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 select-none shrink-0"
+          style={{ cursor: win.maximized ? "default" : "grab" }}
           onPointerDown={(e) => {
             if (!win.maximized) dragControls.start(e);
           }}
@@ -77,18 +86,24 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
             <button
               onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
               className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Minimize"
             >
               <Minus className="w-3 h-3 text-muted-foreground" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }}
               className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label={win.maximized ? "Restore" : "Maximize"}
             >
-              {win.maximized ? <Minimize2 className="w-3 h-3 text-muted-foreground" /> : <Maximize2 className="w-3 h-3 text-muted-foreground" />}
+              {win.maximized
+                ? <Minimize2 className="w-3 h-3 text-muted-foreground" />
+                : <Maximize2 className="w-3 h-3 text-muted-foreground" />
+              }
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onClose(win.id); }}
               className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-destructive/20 transition-colors"
+              aria-label="Close"
             >
               <X className="w-3 h-3 text-muted-foreground hover:text-destructive" />
             </button>

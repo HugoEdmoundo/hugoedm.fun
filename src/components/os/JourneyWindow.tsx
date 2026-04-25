@@ -63,35 +63,59 @@ export default function JourneyWindow({ config, education, experience }: Journey
     },
   ];
 
-  // ─── MOBILE: vertical timeline (lebih ramah jempol) ───────────────
+  // ─── MOBILE: horizontal swipe slides ─────────────────────────────
   if (bp === "mobile") {
     return (
-      <div className="p-4 space-y-4">
-        <div className="relative pl-6">
-          <div className="absolute left-2 top-2 bottom-2 w-px bg-gradient-to-b from-primary via-primary/40 to-transparent" />
+      <div className="h-full flex flex-col">
+        <div
+          className="flex-1 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
+          style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+        >
           {slides.map((slide, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="relative pb-5"
+              className="min-w-full h-full snap-center flex flex-col justify-center px-6 py-8 relative"
             >
-              <div className="absolute -left-[18px] top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-background" />
-              <div className="flex items-center gap-2 mb-1">
-                {"logoUrl" in slide && slide.logoUrl && (
-                  <div className="w-6 h-6 rounded bg-secondary/50 border border-border/30 overflow-hidden shrink-0">
-                    <img src={slide.logoUrl} alt="" className="w-full h-full object-cover" />
+              <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-[0.05] pointer-events-none`} />
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.6 }}
+                transition={{ duration: 0.4 }}
+                className="relative"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  {"logoUrl" in slide && slide.logoUrl && (
+                    <div className="w-12 h-12 rounded-xl bg-secondary/50 border border-border/30 overflow-hidden shrink-0">
+                      <img src={slide.logoUrl} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-primary font-mono text-[10px] tracking-[0.3em] uppercase">{slide.subtitle}</p>
+                    {"duration" in slide && slide.duration && (
+                      <p className="text-muted-foreground/50 font-mono text-[10px] mt-0.5">{slide.duration}</p>
+                    )}
                   </div>
-                )}
-                <p className="text-[10px] font-mono text-primary tracking-widest uppercase">{slide.subtitle}</p>
-              </div>
-              <h3 className="text-base font-bold mb-1">{slide.title}</h3>
-              {"duration" in slide && slide.duration && (
-                <p className="text-[10px] text-muted-foreground/60 font-mono mb-1">{slide.duration}</p>
-              )}
-              <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{slide.content}</p>
-            </motion.div>
+                </div>
+                <h2 className="text-3xl font-bold mb-4 tracking-tight leading-tight gradient-text">{slide.title}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{slide.content}</p>
+                <div className="mt-8 flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground/40 font-mono">
+                    {String(i + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+                  </span>
+                  <div className="flex-1 h-px bg-border/20" />
+                  {i < slides.length - 1 && (
+                    <span className="text-[10px] text-muted-foreground/30 font-mono">swipe →</span>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          ))}
+        </div>
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-1.5 py-3 shrink-0">
+          {slides.map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
           ))}
         </div>
       </div>

@@ -201,6 +201,8 @@ export type Database = {
         Row: {
           about_text: string | null
           admin_code: string
+          bg_day_url: string | null
+          bg_night_url: string | null
           cv_url: string | null
           description: string | null
           favicon_url: string | null
@@ -217,6 +219,8 @@ export type Database = {
         Insert: {
           about_text?: string | null
           admin_code?: string
+          bg_day_url?: string | null
+          bg_night_url?: string | null
           cv_url?: string | null
           description?: string | null
           favicon_url?: string | null
@@ -233,6 +237,8 @@ export type Database = {
         Update: {
           about_text?: string | null
           admin_code?: string
+          bg_day_url?: string | null
+          bg_night_url?: string | null
           cv_url?: string | null
           description?: string | null
           favicon_url?: string | null

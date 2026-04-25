@@ -201,13 +201,28 @@ const Index = () => {
 
   return (
     <div className={`h-screen w-screen relative overflow-hidden select-none transition-colors duration-700 ${easterEgg ? "bg-[hsl(220,20%,97%)] dark:bg-[hsl(220,20%,8%)]" : "bg-background"}`}>
-      {/* Parallax background */}
-      <ParallaxBackground />
+      {/* Parallax background — railway day/night */}
+      <ParallaxBackground
+        dayUrl={(config as any)?.bg_day_url}
+        nightUrl={(config as any)?.bg_night_url}
+        isNight={dark}
+      />
       {/* Noise overlay */}
       <div className="absolute inset-0 noise-overlay pointer-events-none" />
 
       {/* Menu bar */}
-      <div className="absolute top-0 left-0 right-0 h-8 bg-card/60 backdrop-blur-2xl border-b border-border/30 flex items-center justify-between px-4 z-40">
+      <div className="absolute top-0 left-0 right-0 h-8 flex items-center justify-between px-4 z-40"
+        style={{
+          background: dark
+            ? "rgba(10,12,28,0.72)"
+            : "rgba(255,252,245,0.78)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderBottom: dark
+            ? "0.5px solid rgba(255,255,255,0.08)"
+            : "0.5px solid rgba(0,0,0,0.10)",
+        }}
+      >
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold gradient-text">{config?.site_name || "Portfolio"}</span>
           <span className="text-[10px] text-muted-foreground/40 font-mono hidden sm:block">⌘K to search</span>
@@ -247,27 +262,58 @@ const Index = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 0.5 }}
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[2] pb-24 md:pb-0"
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[2] pb-24 md:pb-0 px-6"
         >
           <motion.p
-            className="text-primary font-mono text-xs mb-4 tracking-[0.3em] uppercase text-center px-4"
+            className="font-mono text-[10px] mb-3 tracking-[0.35em] uppercase text-center"
+            style={{
+              color: "rgba(255,255,255,0.75)",
+              textShadow: "0 1px 4px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.6)",
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
             {config?.description || "Welcome to my workspace"}
           </motion.p>
+
           <motion.h1
-            className="text-5xl md:text-7xl lg:text-8xl font-bold gradient-text tracking-tight mb-4 text-center px-4"
-            animate={{ opacity: [0.6, 1, 0.6] }}
+            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-3 text-center"
+            style={{
+              color: "#ffffff",
+              textShadow: [
+                "0 0 0 rgba(0,0,0,0)",        // base
+                "1px 1px 0 rgba(0,0,0,0.9)",  // hard outline
+                "-1px -1px 0 rgba(0,0,0,0.9)",
+                "1px -1px 0 rgba(0,0,0,0.9)",
+                "-1px 1px 0 rgba(0,0,0,0.9)",
+                "0 2px 8px rgba(0,0,0,0.8)",  // soft shadow
+                "0 4px 24px rgba(0,0,0,0.5)",
+              ].join(", "),
+            }}
+            animate={{ opacity: [0.9, 1, 0.9] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
             {config?.hero_name || "Welcome"}
           </motion.h1>
-          <p className="text-muted-foreground text-sm md:text-base font-light max-w-md text-center px-6 mb-2">
+
+          <p
+            className="text-sm md:text-base font-medium text-center max-w-lg mb-1"
+            style={{
+              color: "rgba(255,255,255,0.90)",
+              textShadow: "0 1px 3px rgba(0,0,0,0.95), 0 2px 10px rgba(0,0,0,0.7)",
+            }}
+          >
             {config?.hero_headline || "Architecting Code, Engineering Businesses."}
           </p>
-          <p className="text-muted-foreground/40 text-xs font-mono mt-4 text-center">
+
+          <p
+            className="text-[10px] font-mono mt-4 text-center"
+            style={{
+              color: "rgba(255,255,255,0.45)",
+              textShadow: "0 1px 3px rgba(0,0,0,0.9)",
+            }}
+          >
             Click an icon or press ⌘K to explore
           </p>
         </motion.div>
@@ -286,7 +332,27 @@ const Index = () => {
       {/* Command Palette */}
       <CommandPalette items={commandItems} />
 
-      {/* Dock */}
+      {/* Desktop theme toggle — bottom right corner, desktop only */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1 }}
+        onClick={toggleTheme}
+        className="fixed bottom-6 right-6 z-50 hidden lg:flex w-11 h-11 items-center justify-center rounded-full liquid-glass-dock text-muted-foreground hover:text-foreground transition-colors duration-200"
+        aria-label="Toggle theme"
+      >
+        <motion.span
+          key={dark ? "sun" : "moon"}
+          initial={{ rotate: -30, opacity: 0 }}
+          animate={{ rotate: 0, opacity: 1 }}
+          exit={{ rotate: 30, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </motion.span>
+      </motion.button>
+
+      {/* Dock — tablet & mobile only (desktop uses icons + theme button above) */}
       <Dock items={dockItems} />
     </div>
   );
