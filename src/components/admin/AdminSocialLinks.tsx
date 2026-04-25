@@ -6,10 +6,28 @@ import { Plus, Trash2, Save, X, Share2, icons } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SUGGESTED_ICONS = [
-  "Github", "Linkedin", "Twitter", "Instagram", "Facebook", "Youtube",
-  "Globe", "Mail", "Phone", "MapPin", "Twitch", "MessageCircle",
-  "Send", "Rss", "Link", "ExternalLink", "Dribbble", "Figma",
-  "Codepen", "Chrome", "Slack", "Music",
+  // Code & Dev
+  "Github", "Gitlab", "Codepen", "Code", "Code2", "Terminal", "GitBranch",
+  // Social
+  "Linkedin", "Twitter", "Instagram", "Facebook", "Youtube", "Twitch",
+  "Dribbble", "Figma", "Pinterest", "Snowflake",
+  // Messaging
+  "MessageCircle", "MessageSquare", "Send", "Mail", "Phone", "Smartphone",
+  // Web & Generic
+  "Globe", "Globe2", "Link", "Link2", "ExternalLink", "Rss", "Bookmark",
+  "Chrome", "Compass",
+  // Media & Music
+  "Music", "Music2", "Headphones", "Mic", "Video", "Film", "Camera", "Image",
+  "Podcast", "Radio",
+  // Work & Productivity
+  "Briefcase", "Building", "Building2", "Slack", "Trello", "Notebook",
+  "BookOpen", "FileText", "GraduationCap",
+  // Money & Commerce
+  "DollarSign", "CreditCard", "Coffee", "Gift", "ShoppingBag", "Store",
+  // Location & People
+  "MapPin", "Map", "Users", "User", "UserPlus", "Heart", "Star",
+  // Misc
+  "Award", "Trophy", "Zap", "Sparkles", "Cloud", "Cpu", "Gamepad2",
 ];
 
 export default function AdminSocialLinks() {
