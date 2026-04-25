@@ -343,16 +343,30 @@ export default function AdminSkills() {
   const addMutation = useMutation({
     mutationFn: (s: { name: string; category: string; icon: string }) =>
       upsertSkill({ name: s.name, category: s.category, icon: s.icon, sort_order: skills.length }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); toast({ title: "Skill added!" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteSkill,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); toast({ title: "Deleted" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); },
   });
 
-  const existingNames = useMemo(() => new Set(skills.map((s) => s.name.toLowerCase())), [skills]);
+  const existingByName = useMemo(() => {
+    const m = new Map<string, Skill>();
+    skills.forEach((s) => m.set(s.name.toLowerCase(), s));
+    return m;
+  }, [skills]);
+  const existingNames = useMemo(() => new Set(existingByName.keys()), [existingByName]);
+
+  const toggleSkill = (s: { name: string; category: string; icon: string }) => {
+    const existing = existingByName.get(s.name.toLowerCase());
+    if (existing) {
+      deleteMutation.mutate(existing.id);
+    } else {
+      addMutation.mutate(s);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
