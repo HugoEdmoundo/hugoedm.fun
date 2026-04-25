@@ -74,7 +74,7 @@ function DockIcon({ item, index, mouseX, isTouch }: {
 
       {/* Icon box — macOS style */}
       <div
-        className="w-12 h-12 md:w-14 md:h-14 lg:w-[52px] lg:h-[52px] rounded-2xl flex items-center justify-center transition-colors duration-150"
+        className="w-9 h-9 md:w-12 md:h-12 lg:w-[52px] lg:h-[52px] rounded-xl md:rounded-2xl flex items-center justify-center transition-colors duration-150"
         style={{
           background: item.active
             ? "rgba(255,255,255,0.20)"
@@ -86,7 +86,7 @@ function DockIcon({ item, index, mouseX, isTouch }: {
           color: item.active ? "hsl(var(--primary))" : "rgba(255,255,255,0.85)",
         }}
       >
-        <span className="w-6 h-6 md:w-7 md:h-7 flex items-center justify-center">
+        <span className="w-4 h-4 md:w-6 md:h-6 lg:w-7 lg:h-7 flex items-center justify-center">
           {item.icon}
         </span>
       </div>
@@ -121,8 +121,8 @@ export default function Dock({ items, hasWindows = false }: DockProps) {
       <motion.div
         onMouseMove={(e) => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(Infinity)}
-        className="liquid-glass-dock flex items-end gap-1.5 md:gap-2 lg:gap-3 px-3 md:px-4 lg:px-5 py-2 lg:py-3 pointer-events-auto"
-        style={{ borderRadius: 20 }}
+        className="liquid-glass-dock flex items-end gap-1 md:gap-2 lg:gap-3 px-2 md:px-4 lg:px-5 py-1.5 md:py-2 lg:py-3 pointer-events-auto overflow-x-auto max-w-[calc(100vw-24px)]"
+        style={{ borderRadius: 16, scrollbarWidth: "none" }}
       >
         {allItems.map((item, i) => (
           <DockIcon
