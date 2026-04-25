@@ -7,7 +7,6 @@ import {
   Settings,
   FolderOpen,
   Palette,
-  BookOpen,
   GraduationCap,
   Briefcase,
   Image,
@@ -29,7 +28,7 @@ import AdminGallery from "@/components/admin/AdminGallery";
 import AdminTasks from "@/components/admin/AdminTasks";
 import AdminEducation from "@/components/admin/AdminEducation";
 import AdminExperience from "@/components/admin/AdminExperience";
-import AdminBlog from "@/components/admin/AdminBlog";
+
 import AdminAccount from "@/components/admin/AdminAccount";
 import AdminSocialLinks from "@/components/admin/AdminSocialLinks";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -42,7 +41,6 @@ const tabs = [
   { id: "tasks", label: "Tasks", icon: ListTodo, description: "Assignments" },
   { id: "education", label: "Education", icon: GraduationCap, description: "Academic" },
   { id: "experience", label: "Experience", icon: Briefcase, description: "Work history" },
-  { id: "blog", label: "Blog", icon: BookOpen, description: "Articles" },
   { id: "social", label: "Social Links", icon: Share2, description: "Connect" },
   { id: "account", label: "Account", icon: UserCog, description: "Security" },
 ];
@@ -242,7 +240,6 @@ export default function AdminDashboard() {
                 {activeTab === "tasks" && <AdminTasks />}
                 {activeTab === "education" && <AdminEducation />}
                 {activeTab === "experience" && <AdminExperience />}
-                {activeTab === "blog" && <AdminBlog />}
                 {activeTab === "social" && <AdminSocialLinks />}
                 {activeTab === "account" && <AdminAccount />}
               </motion.div>
@@ -252,7 +249,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Mobile FAB for primary action */}
-      {isMobile && ["projects", "skills", "gallery", "tasks", "education", "experience", "blog", "social"].includes(activeTab) && (
+      {isMobile && ["projects", "skills", "gallery", "tasks", "education", "experience", "social"].includes(activeTab) && (
         <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
