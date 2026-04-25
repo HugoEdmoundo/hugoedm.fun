@@ -343,16 +343,30 @@ export default function AdminSkills() {
   const addMutation = useMutation({
     mutationFn: (s: { name: string; category: string; icon: string }) =>
       upsertSkill({ name: s.name, category: s.category, icon: s.icon, sort_order: skills.length }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); toast({ title: "Skill added!" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteSkill,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); toast({ title: "Deleted" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["skills"] }); },
   });
 
-  const existingNames = useMemo(() => new Set(skills.map((s) => s.name.toLowerCase())), [skills]);
+  const existingByName = useMemo(() => {
+    const m = new Map<string, Skill>();
+    skills.forEach((s) => m.set(s.name.toLowerCase(), s));
+    return m;
+  }, [skills]);
+  const existingNames = useMemo(() => new Set(existingByName.keys()), [existingByName]);
+
+  const toggleSkill = (s: { name: string; category: string; icon: string }) => {
+    const existing = existingByName.get(s.name.toLowerCase());
+    if (existing) {
+      deleteMutation.mutate(existing.id);
+    } else {
+      addMutation.mutate(s);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -423,18 +437,27 @@ export default function AdminSkills() {
                     <div className="flex flex-wrap gap-1.5">
                       {items.map((skill) => {
                         const added = existingNames.has(skill.name.toLowerCase());
+                        const busy = addMutation.isPending || deleteMutation.isPending;
                         return (
                           <button
                             key={skill.name}
-                            disabled={added || addMutation.isPending}
-                            onClick={() => addMutation.mutate(skill)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
+                            disabled={busy}
+                            onClick={() => toggleSkill(skill)}
+                            title={added ? "Click to remove" : "Click to add"}
+                            className={`group/chip px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-all ${
                               added
-                                ? "bg-primary/10 border-primary/20 text-primary cursor-default"
+                                ? "bg-primary/15 border-primary/30 text-primary hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive"
                                 : "bg-secondary/40 border-border/20 hover:border-primary/30 hover:bg-primary/5 cursor-pointer"
-                            }`}
+                            } ${busy ? "opacity-60" : ""}`}
                           >
-                            {added && <Check className="w-3 h-3" />}
+                            {added ? (
+                              <>
+                                <Check className="w-3 h-3 group-hover/chip:hidden" />
+                                <X className="w-3 h-3 hidden group-hover/chip:inline" />
+                              </>
+                            ) : (
+                              <Plus className="w-3 h-3 opacity-50" />
+                            )}
                             {skill.name}
                           </button>
                         );
