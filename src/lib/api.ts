@@ -8,7 +8,7 @@ export type GalleryItem = Tables<"gallery">;
 export type Task = Tables<"tasks">;
 export type Education = Tables<"education">;
 export type Experience = Tables<"experience">;
-export type BlogPost = Tables<"blog_posts">;
+
 
 export async function fetchSiteConfig() {
   const { data, error } = await supabase.from("site_config").select("*").limit(1).single();
@@ -172,30 +172,6 @@ export async function deleteExperience(id: string) {
   if (error) throw error;
 }
 
-export async function fetchBlogPosts(publishedOnly = true) {
-  let query = supabase.from("blog_posts").select("*").order("created_at", { ascending: false });
-  if (publishedOnly) query = query.eq("published", true);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertBlogPost(post: TablesInsert<"blog_posts"> & { id?: string }) {
-  if (post.id) {
-    const { id, ...rest } = post;
-    const { data, error } = await supabase.from("blog_posts").update(rest as TablesUpdate<"blog_posts">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("blog_posts").insert(post).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteBlogPost(id: string) {
-  const { error } = await supabase.from("blog_posts").delete().eq("id", id);
-  if (error) throw error;
-}
 
 export async function uploadMedia(file: File, path: string) {
   const { data, error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
