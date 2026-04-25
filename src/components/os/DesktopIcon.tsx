@@ -22,14 +22,14 @@ export default function DesktopIcon({ icon, label, onClick, delay = 0 }: Desktop
       className="relative group flex items-center justify-center cursor-pointer select-none"
       style={{ width: 52, height: 52 }}
     >
-      {/* Icon circle — solid, no blur, high contrast */}
+      {/* Icon circle — solid dark, no glow, no ring */}
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 group-hover:scale-105"
+        className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200"
         style={{
-          background: "rgba(0,0,0,0.45)",
-          border: "1px solid rgba(255,255,255,0.18)",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.92)",
+          background: "rgba(0,0,0,0.42)",
+          border: "1px solid rgba(255,255,255,0.16)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          color: "rgba(255,255,255,0.90)",
         }}
       >
         {icon}

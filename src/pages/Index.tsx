@@ -332,28 +332,8 @@ const Index = () => {
       {/* Command Palette */}
       <CommandPalette items={commandItems} />
 
-      {/* Desktop theme toggle — bottom right corner, desktop only */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1 }}
-        onClick={toggleTheme}
-        className="fixed bottom-6 right-6 z-50 hidden lg:flex w-11 h-11 items-center justify-center rounded-full liquid-glass-dock text-muted-foreground hover:text-foreground transition-colors duration-200"
-        aria-label="Toggle theme"
-      >
-        <motion.span
-          key={dark ? "sun" : "moon"}
-          initial={{ rotate: -30, opacity: 0 }}
-          animate={{ rotate: 0, opacity: 1 }}
-          exit={{ rotate: 30, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </motion.span>
-      </motion.button>
-
-      {/* Dock — tablet & mobile only (desktop uses icons + theme button above) */}
-      <Dock items={dockItems} />
+      {/* Dock — hilang saat ada window fullscreen */}
+      <Dock items={dockItems} hasWindows={windows.some(w => w.maximized && !w.minimized)} />
     </div>
   );
 };
