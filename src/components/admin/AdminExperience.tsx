@@ -6,6 +6,7 @@ import { Plus, Trash2, Save, X, Upload, Briefcase, ExternalLink } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 
 const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Internship", "Freelance", "Contract", "Volunteer"];
+const EXP_STATUSES = ["Active", "Ongoing", "Completed", "Paused"];
 
 const EMPTY: Partial<Experience> = {
   company: "",
@@ -22,6 +23,8 @@ const EMPTY: Partial<Experience> = {
   reference_contact: "",
   attachment_url: "",
   logo_url: "",
+  status: "",
+  is_current: false,
   sort_order: 0,
 };
 
