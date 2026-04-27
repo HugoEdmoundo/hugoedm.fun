@@ -124,7 +124,21 @@ export default function AdminExperience() {
                 </div>
                 <div>
                   <label className={labelCls}>End Date</label>
-                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if present" />
+                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if present" disabled={!!(editing as any).is_current} />
+                </div>
+                <div>
+                  <label className={labelCls}>Currently Working Here?</label>
+                  <label className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 cursor-pointer">
+                    <input type="checkbox" checked={!!(editing as any).is_current} onChange={(e) => { set("is_current" as any, e.target.checked); if (e.target.checked) set("end_date" as any, ""); }} className="w-4 h-4 accent-primary" />
+                    <span className="text-sm">Yes, this is my current role</span>
+                  </label>
+                </div>
+                <div>
+                  <label className={labelCls}>Employment Status</label>
+                  <select value={(editing as any).status ?? ""} onChange={(e) => set("status" as any, e.target.value)} className={inputCls}>
+                    <option value="">Select…</option>
+                    {EXP_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className={labelCls}>Duration (display label)</label>
