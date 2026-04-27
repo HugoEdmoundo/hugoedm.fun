@@ -264,6 +264,12 @@ export default function AdminExperience() {
                 {(entry as any).employment_type && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary uppercase tracking-wide">{(entry as any).employment_type}</span>
                 )}
+                {((entry as any).is_current || (entry as any).status === "Active" || (entry as any).status === "Ongoing") && (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 uppercase tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {(entry as any).status || "Current"}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
                 {entry.company}
