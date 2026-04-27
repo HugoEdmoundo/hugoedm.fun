@@ -129,13 +129,16 @@ function EducationBody({ edu, compact = false }: { edu: Education; compact?: boo
 }
 
 function ExperienceBody({ exp, compact = false }: { exp: Experience; compact?: boolean }) {
-  const range = formatDateRange(exp.start_date, exp.end_date, exp.duration);
+  const expAny = exp as any;
+  const ongoing = !!expAny.is_current || ["Active", "Ongoing"].includes(expAny.status);
+  const range = formatDateRange(exp.start_date, exp.end_date, exp.duration, ongoing);
   return (
     <div className={compact ? "space-y-3" : "space-y-5"}>
       <div className="flex flex-wrap gap-2">
         {exp.employment_type && <MetaPill icon={Briefcase}>{exp.employment_type}</MetaPill>}
         {range && <MetaPill icon={Calendar}>{range}</MetaPill>}
         {exp.location && <MetaPill icon={MapPin}>{exp.location}</MetaPill>}
+        {ongoing && <OngoingBadge label={expAny.status || "Currently Working"} />}
       </div>
       {exp.description && (
         <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{exp.description}</p>
