@@ -265,8 +265,8 @@ export default function AdminExperience() {
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary uppercase tracking-wide">{(entry as any).employment_type}</span>
                 )}
                 {((entry as any).is_current || (entry as any).status === "Active" || (entry as any).status === "Ongoing") && (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 uppercase tracking-wide">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary uppercase tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     {(entry as any).status || "Current"}
                   </span>
                 )}
@@ -274,7 +274,11 @@ export default function AdminExperience() {
               <p className="text-xs text-muted-foreground">
                 {entry.company}
                 {(entry as any).location ? ` • ${(entry as any).location}` : ""}
-                {entry.duration ? ` • ${entry.duration}` : ""}
+                {entry.duration
+                  ? ` • ${entry.duration}`
+                  : ((entry as any).start_date || (entry as any).end_date || (entry as any).is_current)
+                    ? ` • ${(entry as any).start_date || ""} — ${(entry as any).is_current ? "Present" : ((entry as any).end_date || "")}`
+                    : ""}
               </p>
               {entry.description && <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2">{entry.description}</p>}
               {((entry as any).technologies?.length ?? 0) > 0 && (
