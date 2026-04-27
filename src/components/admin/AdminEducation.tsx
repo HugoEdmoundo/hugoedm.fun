@@ -202,10 +202,16 @@ export default function AdminEducation() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{entry.degree || (entry as any).field_of_study}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold truncate">{entry.degree || (entry as any).field_of_study}</p>
+                {(entry as any).status && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary uppercase tracking-wide">{(entry as any).status}</span>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground truncate">{entry.institution}</p>
               <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">
-                {entry.year || `${(entry as any).start_date || ""}${(entry as any).end_date ? ` — ${(entry as any).end_date}` : ""}`}
+                {entry.year || `${(entry as any).start_date || ""}${(entry as any).end_date ? ` — ${(entry as any).end_date}` : ["Current","In Progress","Expected Graduation"].includes((entry as any).status) ? " — Present" : ""}`}
+                {(entry as any).expected_graduation ? ` (${(entry as any).expected_graduation})` : ""}
                 {(entry as any).location ? ` • ${(entry as any).location}` : ""}
               </p>
             </div>
