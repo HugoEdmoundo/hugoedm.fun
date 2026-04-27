@@ -31,13 +31,22 @@ type Slide =
   | { kind: "education"; data: Education; accent: string }
   | { kind: "experience"; data: Experience; accent: string };
 
-function formatDateRange(start?: string | null, end?: string | null, fallback?: string | null) {
-  if (start || end) {
+function formatDateRange(start?: string | null, end?: string | null, fallback?: string | null, ongoing = false) {
+  if (start || end || ongoing) {
     const s = start || "";
-    const e = end || "Present";
+    const e = ongoing ? "Present" : (end || "Present");
     return `${s}${s ? " — " : ""}${e}`;
   }
   return fallback || "";
+}
+
+function OngoingBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-[11px] text-primary font-medium uppercase tracking-wide">
+      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+      {label}
+    </span>
+  );
 }
 
 function normalizeUrl(url: string) {
