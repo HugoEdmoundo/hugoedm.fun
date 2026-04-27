@@ -17,8 +17,12 @@ const EMPTY: Partial<Education> = {
   activities: "",
   certificate_url: "",
   logo_url: "",
+  status: "",
+  expected_graduation: "",
   sort_order: 0,
 };
+
+const EDU_STATUSES = ["Completed", "Current", "In Progress", "Expected Graduation", "On Hold"];
 
 export default function AdminEducation() {
   const queryClient = useQueryClient();
