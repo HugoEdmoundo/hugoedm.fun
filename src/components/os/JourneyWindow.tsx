@@ -92,13 +92,17 @@ function TechChips({ items }: { items: string[] }) {
 
 // ───────── Card body (shared content for an edu/exp slide) ─────────
 function EducationBody({ edu, compact = false }: { edu: Education; compact?: boolean }) {
-  const range = formatDateRange(edu.start_date, edu.end_date, edu.year);
+  const eduAny = edu as any;
+  const ongoing = ["Current", "In Progress", "Expected Graduation"].includes(eduAny.status);
+  const range = formatDateRange(edu.start_date, edu.end_date, edu.year, ongoing);
   return (
     <div className={compact ? "space-y-3" : "space-y-5"}>
       <div className="flex flex-wrap gap-2">
         {range && <MetaPill icon={Calendar}>{range}</MetaPill>}
         {edu.location && <MetaPill icon={MapPin}>{edu.location}</MetaPill>}
         {edu.field_of_study && <MetaPill icon={GraduationCap}>{edu.field_of_study}</MetaPill>}
+        {ongoing && <OngoingBadge label={eduAny.status} />}
+        {eduAny.expected_graduation && <MetaPill icon={Calendar}>{eduAny.expected_graduation}</MetaPill>}
       </div>
       {edu.achievements && (
         <Section icon={Award} label="Achievements">
