@@ -104,11 +104,23 @@ export default function AdminEducation() {
                 </div>
                 <div>
                   <label className={labelCls}>End Date</label>
-                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if ongoing" />
+                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if ongoing" disabled={["Current","In Progress","Expected Graduation"].includes((editing as any).status)} />
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">Disabled when status is ongoing — will display as "Present"</p>
+                </div>
+                <div>
+                  <label className={labelCls}>Status</label>
+                  <select value={(editing as any).status ?? ""} onChange={(e) => set("status" as any, e.target.value)} className={inputCls}>
+                    <option value="">Select…</option>
+                    {EDU_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Expected Graduation</label>
+                  <input value={(editing as any).expected_graduation ?? ""} onChange={(e) => set("expected_graduation" as any, e.target.value)} className={inputCls} placeholder="e.g. Expected 2027" />
                 </div>
                 <div>
                   <label className={labelCls}>Year (display label)</label>
-                  <input value={editing.year ?? ""} onChange={(e) => set("year", e.target.value)} className={inputCls} placeholder="e.g. 2020 — 2024" />
+                  <input value={editing.year ?? ""} onChange={(e) => set("year", e.target.value)} className={inputCls} placeholder="e.g. 2023 — Present (Expected 2027)" />
                 </div>
                 <div>
                   <label className={labelCls}>Sort Order</label>
