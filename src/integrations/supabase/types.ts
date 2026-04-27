@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           degree: string | null
           end_date: string | null
+          expected_graduation: string | null
           field_of_study: string | null
           id: string
           institution: string
@@ -29,6 +30,7 @@ export type Database = {
           logo_url: string | null
           sort_order: number | null
           start_date: string | null
+          status: string | null
           year: string | null
         }
         Insert: {
@@ -38,6 +40,7 @@ export type Database = {
           created_at?: string
           degree?: string | null
           end_date?: string | null
+          expected_graduation?: string | null
           field_of_study?: string | null
           id?: string
           institution: string
@@ -45,6 +48,7 @@ export type Database = {
           logo_url?: string | null
           sort_order?: number | null
           start_date?: string | null
+          status?: string | null
           year?: string | null
         }
         Update: {
@@ -54,6 +58,7 @@ export type Database = {
           created_at?: string
           degree?: string | null
           end_date?: string | null
+          expected_graduation?: string | null
           field_of_study?: string | null
           id?: string
           institution?: string
@@ -61,6 +66,7 @@ export type Database = {
           logo_url?: string | null
           sort_order?: number | null
           start_date?: string | null
+          status?: string | null
           year?: string | null
         }
         Relationships: []
@@ -76,6 +82,7 @@ export type Database = {
           employment_type: string | null
           end_date: string | null
           id: string
+          is_current: boolean | null
           location: string | null
           logo_url: string | null
           reference_contact: string | null
@@ -83,6 +90,7 @@ export type Database = {
           role: string | null
           sort_order: number | null
           start_date: string | null
+          status: string | null
           technologies: string[] | null
         }
         Insert: {
@@ -95,6 +103,7 @@ export type Database = {
           employment_type?: string | null
           end_date?: string | null
           id?: string
+          is_current?: boolean | null
           location?: string | null
           logo_url?: string | null
           reference_contact?: string | null
@@ -102,6 +111,7 @@ export type Database = {
           role?: string | null
           sort_order?: number | null
           start_date?: string | null
+          status?: string | null
           technologies?: string[] | null
         }
         Update: {
@@ -114,6 +124,7 @@ export type Database = {
           employment_type?: string | null
           end_date?: string | null
           id?: string
+          is_current?: boolean | null
           location?: string | null
           logo_url?: string | null
           reference_contact?: string | null
@@ -121,6 +132,7 @@ export type Database = {
           role?: string | null
           sort_order?: number | null
           start_date?: string | null
+          status?: string | null
           technologies?: string[] | null
         }
         Relationships: []

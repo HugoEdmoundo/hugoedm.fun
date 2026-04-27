@@ -31,13 +31,22 @@ type Slide =
   | { kind: "education"; data: Education; accent: string }
   | { kind: "experience"; data: Experience; accent: string };
 
-function formatDateRange(start?: string | null, end?: string | null, fallback?: string | null) {
-  if (start || end) {
+function formatDateRange(start?: string | null, end?: string | null, fallback?: string | null, ongoing = false) {
+  if (start || end || ongoing) {
     const s = start || "";
-    const e = end || "Present";
+    const e = ongoing ? "Present" : (end || "Present");
     return `${s}${s ? " — " : ""}${e}`;
   }
   return fallback || "";
+}
+
+function OngoingBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-[11px] text-primary font-medium uppercase tracking-wide">
+      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+      {label}
+    </span>
+  );
 }
 
 function normalizeUrl(url: string) {
@@ -83,13 +92,17 @@ function TechChips({ items }: { items: string[] }) {
 
 // ───────── Card body (shared content for an edu/exp slide) ─────────
 function EducationBody({ edu, compact = false }: { edu: Education; compact?: boolean }) {
-  const range = formatDateRange(edu.start_date, edu.end_date, edu.year);
+  const eduAny = edu as any;
+  const ongoing = ["Current", "In Progress", "Expected Graduation"].includes(eduAny.status);
+  const range = formatDateRange(edu.start_date, edu.end_date, edu.year, ongoing);
   return (
     <div className={compact ? "space-y-3" : "space-y-5"}>
       <div className="flex flex-wrap gap-2">
         {range && <MetaPill icon={Calendar}>{range}</MetaPill>}
         {edu.location && <MetaPill icon={MapPin}>{edu.location}</MetaPill>}
         {edu.field_of_study && <MetaPill icon={GraduationCap}>{edu.field_of_study}</MetaPill>}
+        {ongoing && <OngoingBadge label={eduAny.status} />}
+        {eduAny.expected_graduation && <MetaPill icon={Calendar}>{eduAny.expected_graduation}</MetaPill>}
       </div>
       {edu.achievements && (
         <Section icon={Award} label="Achievements">
@@ -116,13 +129,16 @@ function EducationBody({ edu, compact = false }: { edu: Education; compact?: boo
 }
 
 function ExperienceBody({ exp, compact = false }: { exp: Experience; compact?: boolean }) {
-  const range = formatDateRange(exp.start_date, exp.end_date, exp.duration);
+  const expAny = exp as any;
+  const ongoing = !!expAny.is_current || ["Active", "Ongoing"].includes(expAny.status);
+  const range = formatDateRange(exp.start_date, exp.end_date, exp.duration, ongoing);
   return (
     <div className={compact ? "space-y-3" : "space-y-5"}>
       <div className="flex flex-wrap gap-2">
         {exp.employment_type && <MetaPill icon={Briefcase}>{exp.employment_type}</MetaPill>}
         {range && <MetaPill icon={Calendar}>{range}</MetaPill>}
         {exp.location && <MetaPill icon={MapPin}>{exp.location}</MetaPill>}
+        {ongoing && <OngoingBadge label={expAny.status || "Currently Working"} />}
       </div>
       {exp.description && (
         <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{exp.description}</p>

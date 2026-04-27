@@ -6,6 +6,7 @@ import { Plus, Trash2, Save, X, Upload, Briefcase, ExternalLink } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 
 const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Internship", "Freelance", "Contract", "Volunteer"];
+const EXP_STATUSES = ["Active", "Ongoing", "Completed", "Paused"];
 
 const EMPTY: Partial<Experience> = {
   company: "",
@@ -22,6 +23,8 @@ const EMPTY: Partial<Experience> = {
   reference_contact: "",
   attachment_url: "",
   logo_url: "",
+  status: "",
+  is_current: false,
   sort_order: 0,
 };
 
@@ -121,7 +124,21 @@ export default function AdminExperience() {
                 </div>
                 <div>
                   <label className={labelCls}>End Date</label>
-                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if present" />
+                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if present" disabled={!!(editing as any).is_current} />
+                </div>
+                <div>
+                  <label className={labelCls}>Currently Working Here?</label>
+                  <label className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 cursor-pointer">
+                    <input type="checkbox" checked={!!(editing as any).is_current} onChange={(e) => { set("is_current" as any, e.target.checked); if (e.target.checked) set("end_date" as any, ""); }} className="w-4 h-4 accent-primary" />
+                    <span className="text-sm">Yes, this is my current role</span>
+                  </label>
+                </div>
+                <div>
+                  <label className={labelCls}>Employment Status</label>
+                  <select value={(editing as any).status ?? ""} onChange={(e) => set("status" as any, e.target.value)} className={inputCls}>
+                    <option value="">Select…</option>
+                    {EXP_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className={labelCls}>Duration (display label)</label>
@@ -247,11 +264,21 @@ export default function AdminExperience() {
                 {(entry as any).employment_type && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary uppercase tracking-wide">{(entry as any).employment_type}</span>
                 )}
+                {((entry as any).is_current || (entry as any).status === "Active" || (entry as any).status === "Ongoing") && (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-primary uppercase tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    {(entry as any).status || "Current"}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
                 {entry.company}
                 {(entry as any).location ? ` • ${(entry as any).location}` : ""}
-                {entry.duration ? ` • ${entry.duration}` : ""}
+                {entry.duration
+                  ? ` • ${entry.duration}`
+                  : ((entry as any).start_date || (entry as any).end_date || (entry as any).is_current)
+                    ? ` • ${(entry as any).start_date || ""} — ${(entry as any).is_current ? "Present" : ((entry as any).end_date || "")}`
+                    : ""}
               </p>
               {entry.description && <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2">{entry.description}</p>}
               {((entry as any).technologies?.length ?? 0) > 0 && (

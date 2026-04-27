@@ -17,8 +17,12 @@ const EMPTY: Partial<Education> = {
   activities: "",
   certificate_url: "",
   logo_url: "",
+  status: "",
+  expected_graduation: "",
   sort_order: 0,
 };
+
+const EDU_STATUSES = ["Completed", "Current", "In Progress", "Expected Graduation", "On Hold"];
 
 export default function AdminEducation() {
   const queryClient = useQueryClient();
@@ -100,11 +104,23 @@ export default function AdminEducation() {
                 </div>
                 <div>
                   <label className={labelCls}>End Date</label>
-                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if ongoing" />
+                  <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date" as any, e.target.value)} className={inputCls} placeholder="Leave blank if ongoing" disabled={["Current","In Progress","Expected Graduation"].includes((editing as any).status)} />
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">Disabled when status is ongoing — will display as "Present"</p>
+                </div>
+                <div>
+                  <label className={labelCls}>Status</label>
+                  <select value={(editing as any).status ?? ""} onChange={(e) => set("status" as any, e.target.value)} className={inputCls}>
+                    <option value="">Select…</option>
+                    {EDU_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Expected Graduation</label>
+                  <input value={(editing as any).expected_graduation ?? ""} onChange={(e) => set("expected_graduation" as any, e.target.value)} className={inputCls} placeholder="e.g. Expected 2027" />
                 </div>
                 <div>
                   <label className={labelCls}>Year (display label)</label>
-                  <input value={editing.year ?? ""} onChange={(e) => set("year", e.target.value)} className={inputCls} placeholder="e.g. 2020 — 2024" />
+                  <input value={editing.year ?? ""} onChange={(e) => set("year", e.target.value)} className={inputCls} placeholder="e.g. 2023 — Present (Expected 2027)" />
                 </div>
                 <div>
                   <label className={labelCls}>Sort Order</label>
@@ -186,10 +202,16 @@ export default function AdminEducation() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{entry.degree || (entry as any).field_of_study}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold truncate">{entry.degree || (entry as any).field_of_study}</p>
+                {(entry as any).status && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary uppercase tracking-wide">{(entry as any).status}</span>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground truncate">{entry.institution}</p>
               <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">
-                {entry.year || `${(entry as any).start_date || ""}${(entry as any).end_date ? ` — ${(entry as any).end_date}` : ""}`}
+                {entry.year || `${(entry as any).start_date || ""}${(entry as any).end_date ? ` — ${(entry as any).end_date}` : ["Current","In Progress","Expected Graduation"].includes((entry as any).status) ? " — Present" : ""}`}
+                {(entry as any).expected_graduation ? ` (${(entry as any).expected_graduation})` : ""}
                 {(entry as any).location ? ` • ${(entry as any).location}` : ""}
               </p>
             </div>
