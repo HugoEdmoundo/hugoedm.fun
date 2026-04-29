@@ -15,6 +15,10 @@ import {
   Mail,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  Clock,
+  Hash,
+  FolderGit2,
 } from "lucide-react";
 import type { Education, Experience, SiteConfig } from "@/lib/api";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
@@ -95,15 +99,23 @@ function EducationBody({ edu, compact = false }: { edu: Education; compact?: boo
   const eduAny = edu as any;
   const ongoing = ["Current", "In Progress", "Expected Graduation"].includes(eduAny.status);
   const range = formatDateRange(edu.start_date, edu.end_date, edu.year, ongoing);
+  const isNonFormal = eduAny.education_type === "Non-Formal";
   return (
     <div className={compact ? "space-y-3" : "space-y-5"}>
       <div className="flex flex-wrap gap-2">
         {range && <MetaPill icon={Calendar}>{range}</MetaPill>}
         {edu.location && <MetaPill icon={MapPin}>{edu.location}</MetaPill>}
-        {edu.field_of_study && <MetaPill icon={GraduationCap}>{edu.field_of_study}</MetaPill>}
+        {!isNonFormal && edu.field_of_study && <MetaPill icon={GraduationCap}>{edu.field_of_study}</MetaPill>}
+        {eduAny.duration && <MetaPill icon={Clock}>{eduAny.duration}</MetaPill>}
+        {eduAny.credential_id && <MetaPill icon={Hash}>{eduAny.credential_id}</MetaPill>}
         {ongoing && <OngoingBadge label={eduAny.status} />}
         {eduAny.expected_graduation && <MetaPill icon={Calendar}>{eduAny.expected_graduation}</MetaPill>}
       </div>
+      {eduAny.topics && (
+        <Section icon={BookOpen} label="Key Topics">
+          {eduAny.topics}
+        </Section>
+      )}
       {edu.achievements && (
         <Section icon={Award} label="Achievements">
           {edu.achievements}
@@ -114,16 +126,28 @@ function EducationBody({ edu, compact = false }: { edu: Education; compact?: boo
           {edu.activities}
         </Section>
       )}
-      {edu.certificate_url && (
-        <a
-          href={normalizeUrl(edu.certificate_url)}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary text-xs font-medium transition-colors"
-        >
-          <ExternalLink className="w-3 h-3" /> View Certificate
-        </a>
-      )}
+      <div className="flex flex-wrap gap-2 pt-1">
+        {edu.certificate_url && (
+          <a
+            href={normalizeUrl(edu.certificate_url)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary text-xs font-medium transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" /> View Certificate
+          </a>
+        )}
+        {eduAny.projects_url && (
+          <a
+            href={normalizeUrl(eduAny.projects_url)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/50 hover:bg-secondary border border-border/40 text-xs font-medium transition-colors"
+          >
+            <FolderGit2 className="w-3 h-3" /> Projects
+          </a>
+        )}
+      </div>
     </div>
   );
 }
@@ -243,13 +267,19 @@ function SlideContent({ slide, compact = false }: { slide: Slide; compact?: bool
   }
   if (slide.kind === "education") {
     const e = slide.data;
+    const eAny = e as any;
+    const isNonFormal = eAny.education_type === "Non-Formal";
+    const title = isNonFormal ? (eAny.program_name || e.institution) : e.institution;
+    const caption = isNonFormal
+      ? [eAny.provider || e.institution].filter(Boolean).join(" · ")
+      : [e.degree, e.field_of_study].filter(Boolean).join(" · ");
     return (
       <div className="space-y-5">
         <SlideHeader
-          icon={GraduationCap}
-          subtitle="Education"
-          title={e.institution}
-          caption={[e.degree, e.field_of_study].filter(Boolean).join(" · ")}
+          icon={isNonFormal ? BookOpen : GraduationCap}
+          subtitle={isNonFormal ? "Bootcamp / Course" : "Education"}
+          title={title}
+          caption={caption}
           logoUrl={e.logo_url}
           size={compact ? "md" : "lg"}
         />
@@ -298,12 +328,24 @@ export default function JourneyWindow({ config, education, experience }: Journey
     },
   ];
 
-  // Desktop horizontal-scroll wheel binding
+  // Desktop horizontal-scroll wheel binding — only when target slide can't scroll vertically
   useEffect(() => {
     if (bp !== "desktop") return;
     const el = scrollRef.current;
     if (!el) return;
     const handler = (e: WheelEvent) => {
+      // If user is scrolling inside a vertically-scrollable slide, let it happen.
+      const target = e.target as HTMLElement | null;
+      let node: HTMLElement | null = target;
+      while (node && node !== el) {
+        if (node.scrollHeight > node.clientHeight) {
+          const atTop = node.scrollTop <= 0;
+          const atBottom = node.scrollTop + node.clientHeight >= node.scrollHeight - 1;
+          if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) return;
+          break;
+        }
+        node = node.parentElement;
+      }
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
         el.scrollLeft += e.deltaY;
@@ -402,7 +444,7 @@ export default function JourneyWindow({ config, education, experience }: Journey
         {slides.map((slide, i) => (
           <div
             key={i}
-            className="min-w-full h-full snap-center flex items-center justify-center px-12 lg:px-20 py-10 relative"
+            className="min-w-full h-full snap-center flex justify-center px-12 lg:px-20 relative"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-[0.05] pointer-events-none`} />
             <motion.div
@@ -410,7 +452,7 @@ export default function JourneyWindow({ config, education, experience }: Journey
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="max-w-3xl w-full max-h-full overflow-y-auto custom-scrollbar pr-2 relative"
+              className="max-w-3xl w-full h-full overflow-y-auto custom-scrollbar pr-2 relative py-10"
             >
               <div className="mb-5 flex items-center gap-3">
                 <span className="text-[10px] text-muted-foreground/50 font-mono">
