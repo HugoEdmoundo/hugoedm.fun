@@ -432,7 +432,7 @@ export default function JourneyWindow({ config, education, experience }: Journey
         {slides.map((slide, i) => (
           <div
             key={i}
-            className="min-w-full h-full snap-center flex items-center justify-center px-12 lg:px-20 py-10 relative"
+            className="min-w-full h-full snap-center flex justify-center px-12 lg:px-20 relative"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${slide.accent} opacity-[0.05] pointer-events-none`} />
             <motion.div
@@ -440,7 +440,7 @@ export default function JourneyWindow({ config, education, experience }: Journey
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="max-w-3xl w-full max-h-full overflow-y-auto custom-scrollbar pr-2 relative"
+              className="max-w-3xl w-full h-full overflow-y-auto custom-scrollbar pr-2 relative py-10"
             >
               <div className="mb-5 flex items-center gap-3">
                 <span className="text-[10px] text-muted-foreground/50 font-mono">
