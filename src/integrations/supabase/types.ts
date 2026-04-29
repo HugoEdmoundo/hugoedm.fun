@@ -20,7 +20,10 @@ export type Database = {
           activities: string | null
           certificate_url: string | null
           created_at: string
+          credential_id: string | null
           degree: string | null
+          duration: string | null
+          education_type: string | null
           end_date: string | null
           expected_graduation: string | null
           field_of_study: string | null
@@ -28,9 +31,13 @@ export type Database = {
           institution: string
           location: string | null
           logo_url: string | null
+          program_name: string | null
+          projects_url: string | null
+          provider: string | null
           sort_order: number | null
           start_date: string | null
           status: string | null
+          topics: string | null
           year: string | null
         }
         Insert: {
@@ -38,7 +45,10 @@ export type Database = {
           activities?: string | null
           certificate_url?: string | null
           created_at?: string
+          credential_id?: string | null
           degree?: string | null
+          duration?: string | null
+          education_type?: string | null
           end_date?: string | null
           expected_graduation?: string | null
           field_of_study?: string | null
@@ -46,9 +56,13 @@ export type Database = {
           institution: string
           location?: string | null
           logo_url?: string | null
+          program_name?: string | null
+          projects_url?: string | null
+          provider?: string | null
           sort_order?: number | null
           start_date?: string | null
           status?: string | null
+          topics?: string | null
           year?: string | null
         }
         Update: {
@@ -56,7 +70,10 @@ export type Database = {
           activities?: string | null
           certificate_url?: string | null
           created_at?: string
+          credential_id?: string | null
           degree?: string | null
+          duration?: string | null
+          education_type?: string | null
           end_date?: string | null
           expected_graduation?: string | null
           field_of_study?: string | null
@@ -64,9 +81,13 @@ export type Database = {
           institution?: string
           location?: string | null
           logo_url?: string | null
+          program_name?: string | null
+          projects_url?: string | null
+          provider?: string | null
           sort_order?: number | null
           start_date?: string | null
           status?: string | null
+          topics?: string | null
           year?: string | null
         }
         Relationships: []
