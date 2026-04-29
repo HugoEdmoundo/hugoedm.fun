@@ -15,6 +15,10 @@ import {
   Mail,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  Clock,
+  Hash,
+  FolderGit2,
 } from "lucide-react";
 import type { Education, Experience, SiteConfig } from "@/lib/api";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
