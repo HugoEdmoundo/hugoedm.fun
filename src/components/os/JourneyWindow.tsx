@@ -328,12 +328,24 @@ export default function JourneyWindow({ config, education, experience }: Journey
     },
   ];
 
-  // Desktop horizontal-scroll wheel binding
+  // Desktop horizontal-scroll wheel binding — only when target slide can't scroll vertically
   useEffect(() => {
     if (bp !== "desktop") return;
     const el = scrollRef.current;
     if (!el) return;
     const handler = (e: WheelEvent) => {
+      // If user is scrolling inside a vertically-scrollable slide, let it happen.
+      const target = e.target as HTMLElement | null;
+      let node: HTMLElement | null = target;
+      while (node && node !== el) {
+        if (node.scrollHeight > node.clientHeight) {
+          const atTop = node.scrollTop <= 0;
+          const atBottom = node.scrollTop + node.clientHeight >= node.scrollHeight - 1;
+          if ((e.deltaY < 0 && !atTop) || (e.deltaY > 0 && !atBottom)) return;
+          break;
+        }
+        node = node.parentElement;
+      }
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
         el.scrollLeft += e.deltaY;
