@@ -32,12 +32,51 @@ const EMPTY: Partial<Education> = {
 const EDU_STATUSES = ["Completed", "Current", "In Progress", "Expected Graduation", "On Hold"];
 
 // Auto-compute "year" display from start_date/end_date (YYYY-MM strings)
-function computeYearLabel(start?: string, end?: string, ongoing?: boolean, expected?: string) {
-  const s = (start || "").slice(0, 4);
-  const e = ongoing ? "Present" : (end || "").slice(0, 4);
-  if (!s && !e) return "";
-  const base = `${s || "?"} — ${e || "Present"}`;
+// Logic:
+// - If end_date has already passed → show actual end month/year
+// - If end_date is in the future (or this month):
+//     Formal   → show status label (e.g. "In Progress", "Current")
+//     Non-Formal → show "Ongoing"
+// - If no end_date and ongoing status → same as above
+function computeYearLabel(
+  start?: string,
+  end?: string,
+  ongoing?: boolean,
+  expected?: string,
+  status?: string,
+  isFormal?: boolean,
+) {
+  const s = start ? formatMonthYear(start) : "";
+
+  let endLabel = "";
+  if (end) {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    const isPast = end < todayStr;
+    if (isPast) {
+      endLabel = formatMonthYear(end);
+    } else {
+      // Still ongoing — label depends on type
+      endLabel = isFormal && status ? status : "Ongoing";
+    }
+  } else if (ongoing) {
+    endLabel = isFormal && status ? status : "Ongoing";
+  }
+
+  if (!s && !endLabel) return "";
+  const base = `${s || "?"} — ${endLabel || "Ongoing"}`;
   return expected ? `${base} (${expected})` : base;
+}
+
+// Format "YYYY-MM" → "Mon YYYY" e.g. "2024-08" → "Aug 2024"
+function formatMonthYear(ym: string): string {
+  if (!ym) return "";
+  const [year, month] = ym.split("-");
+  if (!year) return ym;
+  if (!month) return year; // only year provided
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const m = parseInt(month, 10);
+  return `${months[m - 1] ?? ""} ${year}`.trim();
 }
 
 export default function AdminEducation() {
@@ -56,9 +95,8 @@ export default function AdminEducation() {
 
   const saveMutation = useMutation({
     mutationFn: (e: any) => {
-      // Auto-generate year from dates
-      const ongoing = ["Current", "In Progress", "Expected Graduation"].includes(e.status);
-      const autoYear = computeYearLabel(e.start_date, e.end_date, ongoing, e.expected_graduation);
+      const ongoing = ["Current", "In Progress", "Expected Graduation"].includes(e.status) && !e.end_date;
+      const autoYear = computeYearLabel(e.start_date, e.end_date, ongoing, e.expected_graduation, e.status, e.education_type === "Formal");
       return upsertEducation({ ...e, year: autoYear });
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["education"] }); setEditing(null); toast({ title: "Saved!" }); },
@@ -77,8 +115,15 @@ export default function AdminEducation() {
 
   const eduType = (editing as any)?.education_type || "Formal";
   const isFormal = eduType === "Formal";
-  const ongoing = ["Current", "In Progress", "Expected Graduation"].includes((editing as any)?.status);
-  const previewYear = computeYearLabel((editing as any)?.start_date, (editing as any)?.end_date, ongoing, (editing as any)?.expected_graduation);
+  const ongoing = ["Current", "In Progress", "Expected Graduation"].includes((editing as any)?.status) && !(editing as any)?.end_date;
+  const previewYear = computeYearLabel(
+    (editing as any)?.start_date,
+    (editing as any)?.end_date,
+    ongoing,
+    (editing as any)?.expected_graduation,
+    (editing as any)?.status,
+    isFormal,
+  );
 
   return (
     <div className="space-y-6">
@@ -175,7 +220,9 @@ export default function AdminEducation() {
                 <div>
                   <label className={labelCls}>End Date</label>
                   <input type="month" value={(editing as any).end_date ?? ""} onChange={(e) => set("end_date", e.target.value)} className={inputCls} placeholder="Leave blank if ongoing" disabled={ongoing} />
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">Disabled when status is ongoing — shows as "Present"</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">
+                    If end date is in the future → shows "Present". Once passed → shows actual month/year.
+                  </p>
                 </div>
                 <div>
                   <label className={labelCls}>Status</label>
@@ -283,8 +330,9 @@ export default function AdminEducation() {
         {items.map((entry, i) => {
           const e = entry as any;
           const isNonFormal = e.education_type === "Non-Formal";
-          const ongoingItem = ["Current", "In Progress", "Expected Graduation"].includes(e.status);
-          const dateLabel = computeYearLabel(e.start_date, e.end_date, ongoingItem, e.expected_graduation);
+          const ongoingItem = ["Current", "In Progress", "Expected Graduation"].includes(e.status) && !e.end_date;
+          const isNonFormalItem = e.education_type === "Non-Formal";
+          const dateLabel = computeYearLabel(e.start_date, e.end_date, ongoingItem, e.expected_graduation, e.status, !isNonFormalItem);
           return (
             <motion.div
               key={entry.id}
