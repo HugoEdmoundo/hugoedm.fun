@@ -267,13 +267,19 @@ function SlideContent({ slide, compact = false }: { slide: Slide; compact?: bool
   }
   if (slide.kind === "education") {
     const e = slide.data;
+    const eAny = e as any;
+    const isNonFormal = eAny.education_type === "Non-Formal";
+    const title = isNonFormal ? (eAny.program_name || e.institution) : e.institution;
+    const caption = isNonFormal
+      ? [eAny.provider || e.institution].filter(Boolean).join(" · ")
+      : [e.degree, e.field_of_study].filter(Boolean).join(" · ");
     return (
       <div className="space-y-5">
         <SlideHeader
-          icon={GraduationCap}
-          subtitle="Education"
-          title={e.institution}
-          caption={[e.degree, e.field_of_study].filter(Boolean).join(" · ")}
+          icon={isNonFormal ? BookOpen : GraduationCap}
+          subtitle={isNonFormal ? "Bootcamp / Course" : "Education"}
+          title={title}
+          caption={caption}
           logoUrl={e.logo_url}
           size={compact ? "md" : "lg"}
         />
