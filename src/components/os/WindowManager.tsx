@@ -27,53 +27,70 @@ interface DraggableWindowProps {
 
 function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDragEnd }: DraggableWindowProps) {
   const dragControls = useDragControls();
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  // Mobile is always fullscreen; desktop respects maximized state
+  const isFullscreen = isMobile || win.maximized;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.88, y: 24 }}
+      key={win.id}
+      initial={{ opacity: 0, scale: 0.92, y: 16 }}
       animate={{
         opacity: win.minimized ? 0 : 1,
-        scale: win.minimized ? 0.85 : 1,
+        scale: win.minimized ? 0.88 : 1,
         y: win.minimized ? 60 : 0,
-        left: win.maximized ? 0 : win.x,
-        top: win.maximized ? 32 : win.y,
-        width: win.maximized ? "100vw" : win.width,
-        height: win.maximized ? "calc(100vh - 32px)" : win.height,
+        left: isFullscreen ? 0 : win.x,
+        top: isFullscreen ? 32 : win.y,
+        width: isFullscreen ? "100vw" : win.width,
+        height: isFullscreen ? "calc(100vh - 32px)" : win.height,
       }}
-      exit={{ opacity: 0, scale: 0.88, y: 24 }}
+      exit={{ opacity: 0, scale: 0.92, y: 16 }}
       transition={{ type: "spring", damping: 26, stiffness: 300 }}
-      drag={!win.maximized}
+      drag={!isFullscreen}
       dragControls={dragControls}
       dragMomentum={false}
       dragListener={false}
+      dragConstraints={{
+        left: 0,
+        top: 32,
+        right: typeof window !== "undefined" ? window.innerWidth - win.width : 800,
+        bottom: typeof window !== "undefined" ? window.innerHeight - win.height : 600,
+      }}
       onDragEnd={(_, info) => {
-        onDragEnd(win.id, (win.x || 0) + info.offset.x, (win.y || 0) + info.offset.y);
+        if (!isFullscreen) {
+          onDragEnd(
+            win.id,
+            Math.max(0, (win.x || 0) + info.offset.x),
+            Math.max(32, (win.y || 0) + info.offset.y),
+          );
+        }
       }}
       onPointerDown={() => onFocus(win.id)}
       className="absolute os-window"
       style={{
-        left: win.maximized ? 0 : win.x,
-        top: win.maximized ? 32 : win.y,
-        width: win.maximized ? "100vw" : win.width,
-        height: win.maximized ? "calc(100vh - 32px)" : win.height,
+        left: isFullscreen ? 0 : win.x,
+        top: isFullscreen ? 32 : win.y,
+        width: isFullscreen ? "100vw" : win.width,
+        height: isFullscreen ? "calc(100vh - 32px)" : win.height,
         zIndex: win.zIndex,
         display: win.minimized ? "none" : "flex",
         pointerEvents: "auto",
       }}
     >
       <div
-        className="flex flex-col h-full w-full overflow-hidden bg-card/90 backdrop-blur-2xl shadow-2xl shadow-black/30"
+        className="flex flex-col h-full w-full overflow-hidden bg-card/92 backdrop-blur-2xl shadow-2xl shadow-black/30"
         style={{
-          borderRadius: win.maximized ? 0 : 12,
-          border: win.maximized ? "none" : "1px solid hsl(var(--border) / 0.4)",
+          borderRadius: isFullscreen ? 0 : 12,
+          border: isFullscreen ? "none" : "1px solid hsl(var(--border) / 0.4)",
         }}
       >
         {/* Title bar */}
         <div
           className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 select-none shrink-0"
-          style={{ cursor: win.maximized ? "default" : "grab" }}
+          style={{ cursor: isFullscreen ? "default" : "grab" }}
           onPointerDown={(e) => {
-            if (!win.maximized) dragControls.start(e);
+            if (!isFullscreen) dragControls.start(e);
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
@@ -83,13 +100,15 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
             <span className="text-xs font-medium truncate text-foreground/80">{win.title}</span>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
-              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
-              aria-label="Minimize"
-            >
-              <Minus className="w-3 h-3 text-muted-foreground" />
-            </button>
+            {!isMobile && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
+                className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+                aria-label="Minimize"
+              >
+                <Minus className="w-3 h-3 text-muted-foreground" />
+              </button>
+            )}
             <button
               onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }}
               className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
