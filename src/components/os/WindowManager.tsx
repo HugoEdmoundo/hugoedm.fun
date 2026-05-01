@@ -68,15 +68,21 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       dragListener={false}
       dragElastic={0}
       dragTransition={{ power: 0, timeConstant: 0, bounceStiffness: 0, bounceDamping: 0 }}
+      dragConstraints={{
+        top: 32, // Cannot drag above header bar
+        left: -(win.width - 120),
+        right: window.innerWidth - 120,
+        bottom: window.innerHeight - 60,
+      }}
       style={{
         // x/y motion values drive transform — framer owns position during drag
         x: isFullscreen ? 0 : mx,
         y: isFullscreen ? 0 : my,
         position: "absolute",
-        left: isFullscreen ? 0 : 0,
-        top: isFullscreen ? 0 : 0,
+        left: 0,
+        top: isFullscreen ? 32 : 0, // Fullscreen stays below Mac header (32px)
         width: isFullscreen ? "100vw" : win.width,
-        height: isFullscreen ? "100vh" : win.height,
+        height: isFullscreen ? "calc(100vh - 32px)" : win.height, // Adjust height for header
         zIndex: win.zIndex,
         display: win.minimized ? "none" : "flex",
         pointerEvents: "auto",
