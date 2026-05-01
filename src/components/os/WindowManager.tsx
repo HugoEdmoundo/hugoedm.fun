@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useDragControls, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { X, Minus, Maximize2, Minimize2 } from "lucide-react";
 
 export interface WindowState {
@@ -27,41 +27,67 @@ interface DraggableWindowProps {
 
 function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDragEnd }: DraggableWindowProps) {
   const dragControls = useDragControls();
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
 
-  // Mobile is always fullscreen; desktop respects maximized state
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // Mobile = always fullscreen. Desktop/tablet = respects maximized state.
   const isFullscreen = isMobile || win.maximized;
+
+  // ── Physics tilt for fullscreen content (Bento-grid feel) ───────────
+  // Subtle 3D tilt that follows pointer when window is maximized.
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const springConfig = { stiffness: 120, damping: 18, mass: 0.3 };
+  const rotateX = useSpring(useTransform(tiltY, [-0.5, 0.5], [2, -2]), springConfig);
+  const rotateY = useSpring(useTransform(tiltX, [-0.5, 0.5], [-2, 2]), springConfig);
+
+  const handleContentMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isFullscreen || isMobile) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    tiltX.set((e.clientX - rect.left) / rect.width - 0.5);
+    tiltY.set((e.clientY - rect.top) / rect.height - 0.5);
+  };
+  const handleContentLeave = () => {
+    tiltX.set(0);
+    tiltY.set(0);
+  };
 
   return (
     <motion.div
       key={win.id}
+      // Initial mount animation
       initial={{ opacity: 0, scale: 0.92, y: 16 }}
       animate={{
         opacity: win.minimized ? 0 : 1,
         scale: win.minimized ? 0.88 : 1,
-        y: win.minimized ? 60 : 0,
-        left: isFullscreen ? 0 : win.x,
-        top: isFullscreen ? 0 : win.y,
-        width: isFullscreen ? "100vw" : win.width,
-        height: isFullscreen ? "100vh" : win.height,
       }}
       exit={{ opacity: 0, scale: 0.92, y: 16 }}
       transition={{ type: "spring", damping: 26, stiffness: 300 }}
+      // Drag — only when NOT fullscreen
       drag={!isFullscreen}
       dragControls={dragControls}
       dragMomentum={false}
       dragListener={false}
-      dragConstraints={false}
+      dragElastic={0}
+      // Update committed position immediately on drag end so layout stays in sync
       onDragEnd={(_, info) => {
         if (!isFullscreen) {
-          const newX = (win.x || 0) + info.offset.x;
-          const newY = (win.y || 0) + info.offset.y;
+          const newX = win.x + info.offset.x;
+          const newY = win.y + info.offset.y;
           onDragEnd(win.id, newX, newY);
         }
       }}
       onPointerDown={() => onFocus(win.id)}
       className="absolute os-window"
       style={{
+        // Position via style (not animate) so dragging doesn't fight a tween
         left: isFullscreen ? 0 : win.x,
         top: isFullscreen ? 0 : win.y,
         width: isFullscreen ? "100vw" : win.width,
@@ -71,22 +97,38 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
         pointerEvents: "auto",
       }}
     >
-      <div
+      <motion.div
         className="flex flex-col h-full w-full overflow-hidden bg-card/92 backdrop-blur-2xl shadow-2xl shadow-black/30 window-content"
         style={{
           borderRadius: isFullscreen ? 0 : 12,
           border: isFullscreen ? "none" : "1px solid hsl(var(--border) / 0.4)",
+          rotateX: isFullscreen && !isMobile ? rotateX : 0,
+          rotateY: isFullscreen && !isMobile ? rotateY : 0,
+          transformStyle: "preserve-3d",
+          perspective: 1500,
         }}
+        onPointerMove={handleContentMove}
+        onPointerLeave={handleContentLeave}
       >
-        {/* Title bar */}
+        {/* Title bar — drag handle */}
         <div
           className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 select-none shrink-0 window-titlebar"
-          style={{ cursor: isFullscreen ? "default" : "grab" }}
+          style={{ cursor: isFullscreen ? "default" : "grab", touchAction: isFullscreen ? "auto" : "none" }}
           onPointerDown={(e) => {
-            if (!isFullscreen) dragControls.start(e);
+            if (!isFullscreen) {
+              e.stopPropagation();
+              onFocus(win.id);
+              dragControls.start(e);
+            }
+          }}
+          onDoubleClick={(e) => {
+            if (!isMobile) {
+              e.stopPropagation();
+              onMaximize(win.id);
+            }
           }}
         >
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 pointer-events-none">
             <div className="w-5 h-5 flex items-center justify-center text-primary shrink-0">
               {win.icon}
             </div>
@@ -95,6 +137,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
           <div className="flex items-center gap-1">
             {!isMobile && (
               <button
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); onMinimize(win.id); }}
                 className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
                 aria-label="Minimize"
@@ -102,17 +145,21 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
                 <Minus className="w-3 h-3 text-muted-foreground" />
               </button>
             )}
+            {!isMobile && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }}
+                className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
+                aria-label={win.maximized ? "Restore" : "Maximize"}
+              >
+                {win.maximized
+                  ? <Minimize2 className="w-3 h-3 text-muted-foreground" />
+                  : <Maximize2 className="w-3 h-3 text-muted-foreground" />
+                }
+              </button>
+            )}
             <button
-              onClick={(e) => { e.stopPropagation(); onMaximize(win.id); }}
-              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
-              aria-label={win.maximized ? "Restore" : "Maximize"}
-            >
-              {win.maximized
-                ? <Minimize2 className="w-3 h-3 text-muted-foreground" />
-                : <Maximize2 className="w-3 h-3 text-muted-foreground" />
-              }
-            </button>
-            <button
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onClose(win.id); }}
               className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-destructive/20 transition-colors"
               aria-label="Close"
@@ -125,7 +172,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
         <div className="flex-1 overflow-auto custom-scrollbar">
           {win.content}
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
