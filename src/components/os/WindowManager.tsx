@@ -83,8 +83,19 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       }}
       onDragEnd={() => {
         if (!isFullscreen) {
-          // Commit final position to React state
-          onDragEnd(win.id, mx.get(), my.get());
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          // Allow window to extend slightly off-screen but keep title bar reachable
+          const minX = -(win.width - 120);
+          const maxX = vw - 120;
+          const minY = 32; // below menu bar
+          const maxY = vh - 60; // keep title bar visible above dock
+          const clampedX = Math.min(Math.max(mx.get(), minX), maxX);
+          const clampedY = Math.min(Math.max(my.get(), minY), maxY);
+          // Snap motion values back to clamped position (no animation = no fling)
+          mx.set(clampedX);
+          my.set(clampedY);
+          onDragEnd(win.id, clampedX, clampedY);
         }
       }}
       onPointerDown={() => onFocus(win.id)}
