@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useDragControls, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, useMotionValue } from "framer-motion";
 import { X, Minus, Maximize2, Minimize2 } from "lucide-react";
 
 export interface WindowState {
@@ -37,83 +37,79 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Mobile = always fullscreen. Desktop/tablet = respects maximized state.
   const isFullscreen = isMobile || win.maximized;
 
-  // ── Physics tilt for fullscreen content (Bento-grid feel) ───────────
-  // Subtle 3D tilt that follows pointer when window is maximized.
-  const tiltX = useMotionValue(0);
-  const tiltY = useMotionValue(0);
-  const springConfig = { stiffness: 120, damping: 18, mass: 0.3 };
-  const rotateX = useSpring(useTransform(tiltY, [-0.5, 0.5], [2, -2]), springConfig);
-  const rotateY = useSpring(useTransform(tiltX, [-0.5, 0.5], [-2, 2]), springConfig);
+  // Controlled motion values — single source of truth for position.
+  // We initialize them at win.x/win.y; framer-motion drag will mutate them
+  // directly, then onDragEnd we read them back into React state. No fighting.
+  const mx = useMotionValue(win.x);
+  const my = useMotionValue(win.y);
 
-  const handleContentMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isFullscreen || isMobile) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    tiltX.set((e.clientX - rect.left) / rect.width - 0.5);
-    tiltY.set((e.clientY - rect.top) / rect.height - 0.5);
-  };
-  const handleContentLeave = () => {
-    tiltX.set(0);
-    tiltY.set(0);
-  };
+  // Sync motion values when committed position changes externally
+  // (e.g. window first opens, or after maximize toggles back)
+  useEffect(() => {
+    mx.set(win.x);
+    my.set(win.y);
+  }, [win.x, win.y, mx, my]);
 
   return (
     <motion.div
       key={win.id}
-      // Initial mount animation
-      initial={{ opacity: 0, scale: 0.92, y: 16 }}
+      initial={{ opacity: 0, scale: 0.94 }}
       animate={{
         opacity: win.minimized ? 0 : 1,
-        scale: win.minimized ? 0.88 : 1,
+        scale: win.minimized ? 0.9 : 1,
       }}
-      exit={{ opacity: 0, scale: 0.92, y: 16 }}
-      transition={{ type: "spring", damping: 26, stiffness: 300 }}
-      // Drag — only when NOT fullscreen
+      exit={{ opacity: 0, scale: 0.94 }}
+      transition={{ type: "spring", damping: 28, stiffness: 320 }}
       drag={!isFullscreen}
       dragControls={dragControls}
       dragMomentum={false}
       dragListener={false}
       dragElastic={0}
-      // Update committed position immediately on drag end so layout stays in sync
-      onDragEnd={(_, info) => {
-        if (!isFullscreen) {
-          const newX = win.x + info.offset.x;
-          const newY = win.y + info.offset.y;
-          onDragEnd(win.id, newX, newY);
-        }
+      // Constrain to viewport so window can't be lost off-screen
+      dragConstraints={{
+        left: -200,
+        top: 0,
+        right: typeof window !== "undefined" ? window.innerWidth - 100 : 1000,
+        bottom: typeof window !== "undefined" ? window.innerHeight - 80 : 800,
       }}
-      onPointerDown={() => onFocus(win.id)}
-      className="absolute os-window"
       style={{
-        // Position via style (not animate) so dragging doesn't fight a tween
-        left: isFullscreen ? 0 : win.x,
-        top: isFullscreen ? 0 : win.y,
+        // x/y motion values drive transform — framer owns position during drag
+        x: isFullscreen ? 0 : mx,
+        y: isFullscreen ? 0 : my,
+        position: "absolute",
+        left: isFullscreen ? 0 : 0,
+        top: isFullscreen ? 0 : 0,
         width: isFullscreen ? "100vw" : win.width,
         height: isFullscreen ? "100vh" : win.height,
         zIndex: win.zIndex,
         display: win.minimized ? "none" : "flex",
         pointerEvents: "auto",
       }}
+      onDragEnd={() => {
+        if (!isFullscreen) {
+          // Commit final position to React state
+          onDragEnd(win.id, mx.get(), my.get());
+        }
+      }}
+      onPointerDown={() => onFocus(win.id)}
+      className="os-window"
     >
-      <motion.div
-        className="flex flex-col h-full w-full overflow-hidden bg-card/92 backdrop-blur-2xl shadow-2xl shadow-black/30 window-content"
+      <div
+        className="flex flex-col h-full w-full overflow-hidden bg-card shadow-2xl shadow-black/40 window-content"
         style={{
           borderRadius: isFullscreen ? 0 : 12,
-          border: isFullscreen ? "none" : "1px solid hsl(var(--border) / 0.4)",
-          rotateX: isFullscreen && !isMobile ? rotateX : 0,
-          rotateY: isFullscreen && !isMobile ? rotateY : 0,
-          transformStyle: "preserve-3d",
-          perspective: 1500,
+          border: isFullscreen ? "none" : "1px solid hsl(var(--border) / 0.6)",
         }}
-        onPointerMove={handleContentMove}
-        onPointerLeave={handleContentLeave}
       >
         {/* Title bar — drag handle */}
         <div
-          className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 select-none shrink-0 window-titlebar"
-          style={{ cursor: isFullscreen ? "default" : "grab", touchAction: isFullscreen ? "auto" : "none" }}
+          className="h-10 flex items-center justify-between px-3 bg-secondary border-b border-border/40 select-none shrink-0 window-titlebar"
+          style={{
+            cursor: isFullscreen ? "default" : "grab",
+            touchAction: isFullscreen ? "auto" : "none",
+          }}
           onPointerDown={(e) => {
             if (!isFullscreen) {
               e.stopPropagation();
@@ -132,7 +128,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
             <div className="w-5 h-5 flex items-center justify-center text-primary shrink-0">
               {win.icon}
             </div>
-            <span className="text-xs font-medium truncate text-foreground/80">{win.title}</span>
+            <span className="text-xs font-medium truncate text-foreground/90">{win.title}</span>
           </div>
           <div className="flex items-center gap-1">
             {!isMobile && (
@@ -169,10 +165,10 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
           </div>
         </div>
         {/* Content */}
-        <div className="flex-1 overflow-auto custom-scrollbar">
+        <div className="flex-1 overflow-auto custom-scrollbar bg-card">
           {win.content}
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
