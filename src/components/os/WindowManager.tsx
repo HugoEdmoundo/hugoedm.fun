@@ -67,13 +67,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       dragMomentum={false}
       dragListener={false}
       dragElastic={0}
-      // Constrain to viewport so window can't be lost off-screen
-      dragConstraints={{
-        left: -200,
-        top: 0,
-        right: typeof window !== "undefined" ? window.innerWidth - 100 : 1000,
-        bottom: typeof window !== "undefined" ? window.innerHeight - 80 : 800,
-      }}
+      dragTransition={{ power: 0, timeConstant: 0, bounceStiffness: 0, bounceDamping: 0 }}
       style={{
         // x/y motion values drive transform — framer owns position during drag
         x: isFullscreen ? 0 : mx,
@@ -89,8 +83,19 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       }}
       onDragEnd={() => {
         if (!isFullscreen) {
-          // Commit final position to React state
-          onDragEnd(win.id, mx.get(), my.get());
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          // Allow window to extend slightly off-screen but keep title bar reachable
+          const minX = -(win.width - 120);
+          const maxX = vw - 120;
+          const minY = 32; // below menu bar
+          const maxY = vh - 60; // keep title bar visible above dock
+          const clampedX = Math.min(Math.max(mx.get(), minX), maxX);
+          const clampedY = Math.min(Math.max(my.get(), minY), maxY);
+          // Snap motion values back to clamped position (no animation = no fling)
+          mx.set(clampedX);
+          my.set(clampedY);
+          onDragEnd(win.id, clampedX, clampedY);
         }
       }}
       onPointerDown={() => onFocus(win.id)}
