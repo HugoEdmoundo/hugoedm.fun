@@ -67,13 +67,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       dragMomentum={false}
       dragListener={false}
       dragElastic={0}
-      // Constrain to viewport so window can't be lost off-screen
-      dragConstraints={{
-        left: -200,
-        top: 0,
-        right: typeof window !== "undefined" ? window.innerWidth - 100 : 1000,
-        bottom: typeof window !== "undefined" ? window.innerHeight - 80 : 800,
-      }}
+      dragTransition={{ power: 0, timeConstant: 0, bounceStiffness: 0, bounceDamping: 0 }}
       style={{
         // x/y motion values drive transform — framer owns position during drag
         x: isFullscreen ? 0 : mx,
