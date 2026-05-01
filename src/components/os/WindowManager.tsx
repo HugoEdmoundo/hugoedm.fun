@@ -41,9 +41,9 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
         scale: win.minimized ? 0.88 : 1,
         y: win.minimized ? 60 : 0,
         left: isFullscreen ? 0 : win.x,
-        top: isFullscreen ? 32 : win.y,
+        top: isFullscreen ? 0 : win.y,
         width: isFullscreen ? "100vw" : win.width,
-        height: isFullscreen ? "calc(100vh - 32px)" : win.height,
+        height: isFullscreen ? "100vh" : win.height,
       }}
       exit={{ opacity: 0, scale: 0.92, y: 16 }}
       transition={{ type: "spring", damping: 26, stiffness: 300 }}
@@ -51,35 +51,28 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       dragControls={dragControls}
       dragMomentum={false}
       dragListener={false}
-      dragConstraints={{
-        left: 0,
-        top: 32,
-        right: typeof window !== "undefined" ? window.innerWidth - win.width : 800,
-        bottom: typeof window !== "undefined" ? window.innerHeight - win.height : 600,
-      }}
+      dragConstraints={false}
       onDragEnd={(_, info) => {
         if (!isFullscreen) {
-          onDragEnd(
-            win.id,
-            Math.max(0, (win.x || 0) + info.offset.x),
-            Math.max(32, (win.y || 0) + info.offset.y),
-          );
+          const newX = (win.x || 0) + info.offset.x;
+          const newY = (win.y || 0) + info.offset.y;
+          onDragEnd(win.id, newX, newY);
         }
       }}
       onPointerDown={() => onFocus(win.id)}
       className="absolute os-window"
       style={{
         left: isFullscreen ? 0 : win.x,
-        top: isFullscreen ? 32 : win.y,
+        top: isFullscreen ? 0 : win.y,
         width: isFullscreen ? "100vw" : win.width,
-        height: isFullscreen ? "calc(100vh - 32px)" : win.height,
+        height: isFullscreen ? "100vh" : win.height,
         zIndex: win.zIndex,
         display: win.minimized ? "none" : "flex",
         pointerEvents: "auto",
       }}
     >
       <div
-        className="flex flex-col h-full w-full overflow-hidden bg-card/92 backdrop-blur-2xl shadow-2xl shadow-black/30"
+        className="flex flex-col h-full w-full overflow-hidden bg-card/92 backdrop-blur-2xl shadow-2xl shadow-black/30 window-content"
         style={{
           borderRadius: isFullscreen ? 0 : 12,
           border: isFullscreen ? "none" : "1px solid hsl(var(--border) / 0.4)",
@@ -87,7 +80,7 @@ function DraggableWindow({ win, onClose, onMinimize, onMaximize, onFocus, onDrag
       >
         {/* Title bar */}
         <div
-          className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 select-none shrink-0"
+          className="h-10 flex items-center justify-between px-3 bg-secondary/60 border-b border-border/30 select-none shrink-0 window-titlebar"
           style={{ cursor: isFullscreen ? "default" : "grab" }}
           onPointerDown={(e) => {
             if (!isFullscreen) dragControls.start(e);

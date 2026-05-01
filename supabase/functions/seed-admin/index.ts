@@ -28,15 +28,28 @@ serve(async (req) => {
       });
     }
 
-    const { data: config, error: configError } = await supabase
+    const { data: configs, error: configError } = await supabase
       .from("site_config")
       .select("admin_code")
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (configError) throw configError;
+    if (configError) {
+      console.error("Config query error:", configError);
+      throw new Error(`Database error: ${configError.message}`);
+    }
 
-    if (!config || config.admin_code !== accessCode) {
+    const config = configs?.[0];
+    if (!config) {
+      return new Response(JSON.stringify({ 
+        error: "No site config found",
+        details: "Please insert a row into site_config table with admin_code"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (config.admin_code !== accessCode) {
       return new Response(JSON.stringify({ error: "Invalid access code" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -82,7 +95,12 @@ serve(async (req) => {
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
+    console.error("Seed-admin error:", error);
+    return new Response(JSON.stringify({ 
+      error: "Internal server error", 
+      details: message,
+      hint: "Check if site_config has data and user_roles table exists"
+    }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
