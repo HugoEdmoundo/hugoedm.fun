@@ -19,13 +19,13 @@ export default function GalleryWindow({ items }: GalleryWindowProps) {
 
   return (
     <>
-      {/* Zero padding, zero gap — full bleed photos */}
+      {/* Padded grid with breathing room between photos */}
       <div
-        className="w-full h-full overflow-y-auto"
+        className="w-full h-full overflow-y-auto p-3 sm:p-4"
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
-          gap: 0,
+          gap: bp === "mobile" ? 8 : 12,
         }}
       >
         {items.map((item) => (
@@ -33,7 +33,7 @@ export default function GalleryWindow({ items }: GalleryWindowProps) {
             key={item.id}
             type="button"
             onClick={() => setActive(item)}
-            className="relative aspect-square overflow-hidden cursor-zoom-in group"
+            className="relative aspect-square overflow-hidden cursor-zoom-in group rounded-lg border border-border/40 bg-secondary/20"
             aria-label={item.caption || "Open image"}
           >
             <img
