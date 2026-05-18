@@ -143,7 +143,7 @@ export default function AdminSiteConfig() {
                     <label className="shrink-0 px-3 py-2.5 rounded-xl bg-secondary/70 border border-border/50 text-sm cursor-pointer hover:bg-muted transition-colors flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline text-xs">Upload</span>
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(field.key, e.target.files[0])} />
+                      <input type="file" accept={field.key === "cv_url" ? ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "image/*"} className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(field.key, e.target.files[0])} />
                     </label>
                   )}
                 </div>

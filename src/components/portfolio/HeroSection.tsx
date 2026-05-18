@@ -101,7 +101,7 @@ export default function HeroSection({ config, socialLinks = [] }: HeroSectionPro
 
           {config?.cv_url && (
             <motion.a
-              href={`https://docs.google.com/viewer?url=${encodeURIComponent(config.cv_url)}&embedded=true`}
+              href="/cv"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, scale: 0 }}
