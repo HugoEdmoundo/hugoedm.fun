@@ -42,8 +42,8 @@ export default function CVViewer() {
       const slidesMatch = u.match(/docs\.google\.com\/presentation\/d\/([^/?]+)/);
       if (slidesMatch) return `https://docs.google.com/presentation/d/${slidesMatch[1]}/preview`;
 
-      // PDF direct - use native browser viewer
-      if (u.toLowerCase().includes(".pdf") || u.includes("supabase.co/storage/v1/object/public/media/")) {
+      // PDF / file lokal dari CMS - use native browser viewer
+      if (u.toLowerCase().includes(".pdf") || u.includes("/uploads/")) {
         return u;
       }
 

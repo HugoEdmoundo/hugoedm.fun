@@ -1,4 +1,4 @@
-import { icons } from "lucide-react";
+import { resolveIcon } from "@/lib/icons";
 import type { Skill } from "@/lib/api";
 import { motion } from "framer-motion";
 
@@ -22,7 +22,7 @@ export default function SkillsWindow({ skills }: SkillsWindowProps) {
             {skills
               .filter((s) => s.category === cat)
               .map((skill, i) => {
-                const LucideIcon = skill.icon ? (icons as any)[skill.icon] : null;
+                const LucideIcon = resolveIcon(skill.icon);
                 return (
                   <motion.div
                     key={skill.id}

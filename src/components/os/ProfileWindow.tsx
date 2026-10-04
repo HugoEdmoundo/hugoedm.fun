@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Store, ArrowUpRight, FileText, icons } from "lucide-react";
+import { Store, ArrowUpRight, FileText } from "lucide-react";
+import { resolveIcon } from "@/lib/icons";
 import type { SiteConfig } from "@/lib/api";
 import { BentoCard, BentoGrid } from "./BentoGrid";
 import { useGitHubRepos } from "@/lib/github";
@@ -23,8 +24,8 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
   const bp = useBreakpoint();
   const { data: repos } = useGitHubRepos(config?.github_username ?? undefined);
   const [showPhoto, setShowPhoto] = useState(false);
-  const marketplaceText = String((config as any)?.marketplace_cta_text ?? "Visit Marketplace").trim();
-  const marketplaceUrl = String((config as any)?.marketplace_cta_url ?? "").trim();
+  const marketplaceText = String(config?.marketplace_cta_text ?? "Visit Marketplace").trim();
+  const marketplaceUrl = String(config?.marketplace_cta_url ?? "").trim();
 
   // Hero — selalu sama tapi dipadatkan di mobile
   const Hero = (
@@ -76,7 +77,7 @@ export default function ProfileWindow({ config, socialLinks = [] }: ProfileWindo
   const SocialActions = (
     <BentoGrid className={bp === "mobile" ? "grid-cols-2" : bp === "tablet" ? "grid-cols-3" : "grid-cols-2"}>
       {socialLinks.map((link, i) => {
-        const LucideIcon = (icons as any)[link.icon];
+        const LucideIcon = resolveIcon(link.icon);
         const href = normalizeUrl(link.url);
         return (
           <BentoCard key={link.id} delay={0.2 + i * 0.04} className="flex items-center gap-3 p-0">

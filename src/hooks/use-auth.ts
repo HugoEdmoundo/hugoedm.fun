@@ -1,33 +1,51 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { Session } from "@supabase/supabase-js";
+import { useCallback, useEffect, useState } from "react";
+import { checkIsAdmin, getToken, loginWithCode, setToken } from "@/lib/api";
+
+export interface AuthUser {
+  role: string;
+}
 
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-    });
+    let active = true;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    if (!getToken()) {
       setLoading(false);
-    });
+      return;
+    }
 
-    return () => subscription.unsubscribe();
+    checkIsAdmin()
+      .then((ok) => {
+        if (active) setUser(ok ? { role: "admin" } : null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  };
+  const signIn = useCallback(async (code: string) => {
+    const res = await loginWithCode(code);
+    setUser({ role: res.user.role });
+  }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  const signOut = useCallback(() => {
+    setToken(null);
+    setUser(null);
+  }, []);
 
-  return { session, loading, signIn, signOut, user: session?.user ?? null };
+  return {
+    user,
+    session: user ? { user } : null,
+    isAuthenticated: Boolean(user),
+    loading,
+    signIn,
+    signOut,
+  };
 }

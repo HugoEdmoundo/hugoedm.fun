@@ -4,9 +4,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Lock, ArrowRight, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { ensureAdminUserForCode, fetchSiteConfig } from "@/lib/api";
-
-const DEFAULT_ADMIN_CODE = "?hl%3Did<26";
 
 export default function AdminLogin() {
   const [code, setCode] = useState("");
@@ -20,21 +17,10 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const config = await fetchSiteConfig();
-      const activeCode = String((config as any)?.admin_code ?? DEFAULT_ADMIN_CODE).trim();
-      const inputCode = code.trim();
-
-      if (!activeCode || inputCode !== activeCode) {
-        toast({ title: "Access denied", description: "Invalid code", variant: "destructive" });
-        return;
-      }
-
-      await ensureAdminUserForCode(inputCode);
-      await signIn("hugoedm.fun@portfolio.local", inputCode);
-
+      await signIn(code);
       navigate("/admin");
-    } catch (err: any) {
-      toast({ title: "Login failed", description: err.message, variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Login failed", description: err instanceof Error ? err.message : "Invalid code", variant: "destructive" });
     } finally {
       setLoading(false);
     }

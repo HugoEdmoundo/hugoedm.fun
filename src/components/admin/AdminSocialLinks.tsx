@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchSocialLinks, upsertSocialLink, deleteSocialLink } from "@/lib/api";
+import { fetchSocialLinks, upsertSocialLink, deleteSocialLink, type SocialLink } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save, X, Share2, icons } from "lucide-react";
+import { Plus, Trash2, Save, X, Share2 } from "lucide-react";
+import { resolveIcon, ICON_NAMES } from "@/lib/icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SUGGESTED_ICONS = [
@@ -10,7 +11,7 @@ const SUGGESTED_ICONS = [
   "Github", "Gitlab", "Codepen", "Code", "Code2", "Terminal", "GitBranch",
   // Social
   "Linkedin", "Twitter", "Instagram", "Facebook", "Youtube", "Twitch",
-  "Dribbble", "Figma", "Pinterest", "Snowflake",
+  "Dribbble", "Figma", "Pin", "Snowflake",
   // Messaging
   "MessageCircle", "MessageSquare", "Send", "Mail", "Phone", "Smartphone",
   // Web & Generic
@@ -34,7 +35,7 @@ export default function AdminSocialLinks() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: links = [], isLoading } = useQuery({ queryKey: ["social-links"], queryFn: fetchSocialLinks });
-  const [editing, setEditing] = useState<Record<string, any> | null>(null);
+  const [editing, setEditing] = useState<Partial<SocialLink> | null>(null);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -45,7 +46,7 @@ export default function AdminSocialLinks() {
   }, []);
 
   const saveMutation = useMutation({
-    mutationFn: (link: any) => upsertSocialLink(link),
+    mutationFn: (link: Partial<SocialLink>) => upsertSocialLink(link),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["social-links"] }); setEditing(null); toast({ title: "Saved!" }); },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -62,7 +63,7 @@ export default function AdminSocialLinks() {
   );
 
   const IconPreview = ({ name }: { name: string }) => {
-    const LucideIcon = (icons as any)[name];
+    const LucideIcon = resolveIcon(name);
     return LucideIcon ? <LucideIcon className="w-4 h-4" /> : <span className="text-xs">?</span>;
   };
 
@@ -103,7 +104,23 @@ export default function AdminSocialLinks() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Icon (Lucide)</label>
-                <input value={editing.icon} onChange={(e) => setEditing({ ...editing, icon: e.target.value })} className="w-full px-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-2" />
+                <select
+                  value={ICON_NAMES.includes(editing.icon as (typeof ICON_NAMES)[number]) ? editing.icon : ""}
+                  onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-secondary/50 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-2"
+                >
+                  <option value="">Pilih ikon…</option>
+                  {ICON_NAMES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                {editing.icon && !ICON_NAMES.includes(editing.icon as (typeof ICON_NAMES)[number]) && (
+                  <p className="text-[10px] text-destructive mb-2">
+                    &quot;{editing.icon}&quot; tidak ada di registry, ikon tidak akan dirender.
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {SUGGESTED_ICONS.map((ic) => (
                     <button
@@ -135,7 +152,7 @@ export default function AdminSocialLinks() {
       </AnimatePresence>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {links.map((link: any, i: number) => (
+        {links.map((link, i) => (
           <motion.div
             key={link.id}
             initial={{ opacity: 0, y: 8 }}

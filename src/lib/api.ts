@@ -1,227 +1,168 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type {
+  Education,
+  Experience,
+  GalleryItem,
+  Project,
+  SiteConfig,
+  Skill,
+  SocialLink,
+  Task,
+} from "@/lib/types";
 
-export type SiteConfig = Tables<"site_config">;
-export type Project = Tables<"projects">;
-export type Skill = Tables<"skills">;
-export type GalleryItem = Tables<"gallery">;
-export type Task = Tables<"tasks">;
-export type Education = Tables<"education">;
-export type Experience = Tables<"experience">;
+export type { Education, Experience, GalleryItem, Project, SiteConfig, Skill, SocialLink, Task };
 
+const API_BASE = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/+$/, "");
+const TOKEN_KEY = "hugoedm_admin_token";
 
-export async function fetchSiteConfig() {
-  const { data, error } = await supabase.from("site_config").select("*").limit(1).single();
-  if (error && error.code !== 'PGRST116') throw error;
-  return data;
+type Doc = Record<string, unknown> & { _id?: string };
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
 }
 
-export async function updateSiteConfig(updates: TablesUpdate<"site_config">) {
-  const existing = await fetchSiteConfig();
-  if (existing) {
-    const { data, error } = await supabase.from("site_config").update(updates).eq("id", existing.id).select().single();
-    if (error) throw error;
-    return data;
+export function setToken(token: string | null): void {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
+/** MongoDB memakai `_id`, layer UI lebih nyaman pakai `id` */
+function normalize<T>(doc: Doc | null): T | null {
+  if (!doc) return null;
+  const { _id, ...rest } = doc;
+  return { id: _id, ...rest } as T;
+}
+
+function normalizeMany<T>(docs: Doc[]): T[] {
+  return docs.map((doc) => normalize<T>(doc) as T);
+}
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const token = getToken();
+  const headers = new Headers(init.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
+
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+
+  if (res.status === 401 && token) {
+    setToken(null);
+    throw new Error("Sesi berakhir, login ulang");
   }
-  const { data, error } = await supabase.from("site_config").insert(updates as TablesInsert<"site_config">).select().single();
-  if (error) throw error;
-  return data;
+
+  const payload = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(payload?.error ?? `Request failed (${res.status})`);
+  return payload as T;
 }
 
-export async function fetchProjects() {
-  const { data, error } = await supabase.from("projects").select("*").order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
+const get = <T>(path: string) => request<T>(path);
+const post = <T>(path: string, body: unknown) =>
+  request<T>(path, { method: "POST", body: JSON.stringify(body) });
+const put = <T>(path: string, body: unknown) =>
+  request<T>(path, { method: "PUT", body: JSON.stringify(body) });
+const del = <T>(path: string) => request<T>(path, { method: "DELETE" });
 
-export async function fetchFeaturedProjects() {
-  const { data, error } = await supabase.from("projects").select("*").eq("featured", true).order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
+/* ── Auth ─────────────────────────────────────────────────── */
 
-export async function upsertProject(project: TablesInsert<"projects"> & { id?: string }) {
-  if (project.id) {
-    const { id, ...rest } = project;
-    const { data, error } = await supabase.from("projects").update(rest as TablesUpdate<"projects">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("projects").insert(project).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteProject(id: string) {
-  const { error } = await supabase.from("projects").delete().eq("id", id);
-  if (error) throw error;
-}
-
-export async function fetchSkills() {
-  const { data, error } = await supabase.from("skills").select("*").order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertSkill(skill: TablesInsert<"skills"> & { id?: string }) {
-  if (skill.id) {
-    const { id, ...rest } = skill;
-    const { data, error } = await supabase.from("skills").update(rest as TablesUpdate<"skills">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("skills").insert(skill).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteSkill(id: string) {
-  const { error } = await supabase.from("skills").delete().eq("id", id);
-  if (error) throw error;
-}
-
-export async function fetchGallery() {
-  const { data, error } = await supabase.from("gallery").select("*").order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertGalleryItem(item: TablesInsert<"gallery"> & { id?: string }) {
-  if (item.id) {
-    const { id, ...rest } = item;
-    const { data, error } = await supabase.from("gallery").update(rest as TablesUpdate<"gallery">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("gallery").insert(item).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteGalleryItem(id: string) {
-  const { error } = await supabase.from("gallery").delete().eq("id", id);
-  if (error) throw error;
-}
-
-export async function fetchTasks() {
-  const { data, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertTask(task: TablesInsert<"tasks"> & { id?: string }) {
-  if (task.id) {
-    const { id, ...rest } = task;
-    const { data, error } = await supabase.from("tasks").update(rest as TablesUpdate<"tasks">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("tasks").insert(task).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteTask(id: string) {
-  const { error } = await supabase.from("tasks").delete().eq("id", id);
-  if (error) throw error;
-}
-
-export async function fetchEducation() {
-  const { data, error } = await supabase.from("education").select("*").order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertEducation(edu: TablesInsert<"education"> & { id?: string }) {
-  if (edu.id) {
-    const { id, ...rest } = edu;
-    const { data, error } = await supabase.from("education").update(rest as TablesUpdate<"education">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("education").insert(edu).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteEducation(id: string) {
-  const { error } = await supabase.from("education").delete().eq("id", id);
-  if (error) throw error;
-}
-
-export async function fetchExperience() {
-  const { data, error } = await supabase.from("experience").select("*").order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertExperience(exp: TablesInsert<"experience"> & { id?: string }) {
-  if (exp.id) {
-    const { id, ...rest } = exp;
-    const { data, error } = await supabase.from("experience").update(rest as TablesUpdate<"experience">).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("experience").insert(exp).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteExperience(id: string) {
-  const { error } = await supabase.from("experience").delete().eq("id", id);
-  if (error) throw error;
-}
-
-
-export async function uploadMedia(file: File, path: string) {
-  const { data, error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-  if (error) throw error;
-  const { data: urlData } = supabase.storage.from("media").getPublicUrl(data.path);
-  return urlData.publicUrl;
-}
-
-// Social Links
-export async function fetchSocialLinks() {
-  const { data, error } = await supabase.from("social_links").select("*").order("sort_order");
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function upsertSocialLink(link: any) {
-  if (link.id) {
-    const { id, ...rest } = link;
-    const { data, error } = await supabase.from("social_links").update(rest).eq("id", id).select().single();
-    if (error) throw error;
-    return data;
-  }
-  const { data, error } = await supabase.from("social_links").insert(link).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteSocialLink(id: string) {
-  const { error } = await supabase.from("social_links").delete().eq("id", id);
-  if (error) throw error;
-}
-
-export async function checkIsAdmin() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return false;
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-  return !!data;
-}
-
-export async function ensureAdminUserForCode(accessCode: string) {
-  const { error } = await supabase.functions.invoke("seed-admin", {
-    body: { accessCode },
+export async function loginWithCode(code: string) {
+  const res = await post<{ token: string; user: { role: string; site_name?: string } }>("/auth/login", {
+    code: code.trim(),
   });
+  setToken(res.token);
+  return res;
+}
 
-  if (error) throw error;
+export interface AccessCodeStatus {
+  configured: boolean;
+  hashed: boolean;
+}
+
+/** Kode akses tidak pernah dikirim ulang; API hanya melaporkan statusnya. */
+export async function fetchAccessCodeStatus(): Promise<AccessCodeStatus> {
+  return get<AccessCodeStatus>("/auth/code");
+}
+
+export async function updateAccessCode(code: string) {
+  return put<{ ok: boolean }>("/auth/code", { code: code.trim() });
+}
+
+export async function checkIsAdmin(): Promise<boolean> {
+  try {
+    await get<{ user: { role: string } }>("/auth/me");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/* ── Site config ──────────────────────────────────────────── */
+
+export async function fetchSiteConfig(): Promise<SiteConfig | null> {
+  return normalize<SiteConfig>(await get<Doc>("/site-config"));
+}
+
+export async function updateSiteConfig(updates: Partial<SiteConfig>) {
+  return normalize<SiteConfig>(await put<Doc>("/site-config", updates));
+}
+
+/* ── Collections ──────────────────────────────────────────── */
+
+type Collection<T> = { path: string };
+
+function createCollectionApi<T>({ path }: Collection<T>) {
+  return {
+    list: async () => normalizeMany<T>(await get<Doc[]>(path)),
+    create: async (payload: Partial<T>) => normalize<T>(await post<Doc>(path, payload)),
+    update: async (id: string, payload: Partial<T>) => normalize<T>(await put<Doc>(`${path}/${id}`, payload)),
+    remove: async (id: string) => del<{ ok: boolean }>(`${path}/${id}`),
+    /** create kalau `id` kosong, update kalau ada (setara upsert lama) */
+    save: async (payload: Partial<T> & { id?: string }) =>
+      payload.id
+        ? normalize<T>(await put<Doc>(`${path}/${payload.id}`, payload))
+        : normalize<T>(await post<Doc>(path, payload)),
+  };
+}
+
+const projectsApi = createCollectionApi<Project>({ path: "/projects" });
+const skillsApi = createCollectionApi<Skill>({ path: "/skills" });
+const galleryApi = createCollectionApi<GalleryItem>({ path: "/gallery" });
+const tasksApi = createCollectionApi<Task>({ path: "/tasks" });
+const educationApi = createCollectionApi<Education>({ path: "/education" });
+const experienceApi = createCollectionApi<Experience>({ path: "/experience" });
+const socialApi = createCollectionApi<SocialLink>({ path: "/social-links" });
+
+export const fetchProjects = projectsApi.list;
+export const upsertProject = projectsApi.save;
+export const deleteProject = projectsApi.remove;
+
+export const fetchSkills = skillsApi.list;
+export const upsertSkill = skillsApi.save;
+export const deleteSkill = skillsApi.remove;
+
+export const fetchGallery = galleryApi.list;
+export const upsertGalleryItem = galleryApi.save;
+export const deleteGalleryItem = galleryApi.remove;
+
+export const fetchTasks = tasksApi.list;
+export const upsertTask = tasksApi.save;
+export const deleteTask = tasksApi.remove;
+
+export const fetchEducation = educationApi.list;
+export const upsertEducation = educationApi.save;
+export const deleteEducation = educationApi.remove;
+
+export const fetchExperience = experienceApi.list;
+export const upsertExperience = experienceApi.save;
+export const deleteExperience = experienceApi.remove;
+
+export const fetchSocialLinks = socialApi.list;
+export const upsertSocialLink = socialApi.save;
+export const deleteSocialLink = socialApi.remove;
+
+/* ── Media ────────────────────────────────────────────────── */
+
+export async function uploadMedia(file: File, _path?: string): Promise<string> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await request<{ url: string }>("/upload", { method: "POST", body: form });
+  return res.url;
 }

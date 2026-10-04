@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { checkIsAdmin } from "@/lib/api";
 import {
   LogOut,
   Settings,
@@ -49,25 +48,14 @@ export default function AdminDashboard() {
   const { session, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checking, setChecking] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const activeTab = searchParams.get("tab") || "config";
   const activeTabInfo = tabs.find((t) => t.id === activeTab);
 
   useEffect(() => {
-    if (!loading && !session) {
-      navigate("/admin/login");
-      return;
-    }
-    if (session) {
-      checkIsAdmin().then((admin) => {
-        setIsAdmin(admin);
-        setChecking(false);
-        if (!admin) navigate("/");
-      });
-    }
+    if (loading) return;
+    navigate(session ? "/admin" : "/admin/login", { replace: true });
   }, [session, loading, navigate]);
 
   // Close sidebar on tab change (mobile)
@@ -76,7 +64,7 @@ export default function AdminDashboard() {
     if (isMobile) setSidebarOpen(false);
   };
 
-  if (loading || checking) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
@@ -87,8 +75,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background flex relative overflow-hidden">

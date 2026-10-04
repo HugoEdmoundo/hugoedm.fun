@@ -154,7 +154,6 @@ const PREDEFINED_SKILLS = [
   { name: "SQLite", category: "Databases", icon: "Database" },
   { name: "Firebase", category: "Databases", icon: "Flame" },
   { name: "Firestore", category: "Databases", icon: "Flame" },
-  { name: "Supabase", category: "Databases", icon: "Database" },
   { name: "PlanetScale", category: "Databases", icon: "Database" },
   { name: "Neon", category: "Databases", icon: "Database" },
   { name: "Turso", category: "Databases", icon: "Database" },
