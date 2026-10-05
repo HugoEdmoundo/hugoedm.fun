@@ -13,6 +13,7 @@
     "inspect": "tsx scripts/inspect-db.ts"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -22,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "multer": "^2.0.2",
+    "serverless-http": "^4.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

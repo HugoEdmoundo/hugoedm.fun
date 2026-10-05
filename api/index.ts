@@ -1,0 +1,4 @@
+import { app } from "../server/src/index.js";
+import serverless from "serverless-http";
+
+export default serverless(app);

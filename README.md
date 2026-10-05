@@ -153,9 +153,53 @@ node scripts/gen-icon-registry.mjs
 
 ---
 
-## Deploy
+## Deploy (Full Serverless - Vercel)
 
-- **Frontend**: output `dist/` → Nginx/Vercel/Netlify (static hosting).
-- **Backend**: jalankan `server/` sebagai proses Node (pm2/systemd/Docker) di VPS atau Railway/Render/Fly. Butuh persistent disk untuk folder `uploads/`, jadi **jangan** deploy API ke Vercel Serverless tanpa objected storage.
-- Set `VITE_API_URL` ke URL publik API saat build frontend, dan `PUBLIC_URL` di `server/.env` ke domain yang dipakai user mengunduh file media.
-- `CLIENT_ORIGIN` di `server/.env` diisi origin frontend untuk membatasi CORS.
+Sekarang project ini bisa di-deploy **full serverless** di Vercel (Frontend + API dalam 1 project).
+
+### Setup di Vercel
+
+1. Import repo ke [Vercel](https://vercel.com/)
+2. Framework: **Vite** (otomatis terdeteksi)
+3. Build Command: 
+pm run build
+4. Output Directory: dist
+
+### Environment Variables
+
+Tambahkan env berikut di **Vercel → Project → Settings → Environment Variables**:
+
+| Key | Value | Keterangan |
+|---|---|---|
+| MONGODB_URI | mongodb+srv://... | Koneksi MongoDB Atlas |
+| JWT_SECRET | String acak minimal 32 karakter | Wajib |
+| JWT_EXPIRES_IN | 1h | Masa hidup token (opsional) |
+| LOGIN_RATE_LIMIT | 8 | Percobaan login gagal per IP (opsional) |
+| UPLOAD_MAX_MB | 10 | Batas ukuran upload (MB, opsional) |
+| PUBLIC_URL | https://your-app.vercel.app | Origin publik API |
+| CLIENT_ORIGIN | https://your-app.vercel.app | Origin frontend untuk CORS |
+| VITE_API_URL | *(kosongkan)* | Frontend langsung pakai /api (same origin) |
+
+### Upload ke Vercel Blob
+
+1. Buka **Vercel → Storage → Blob → Create Blob Storage**
+2. Connect ke project ini
+3. BLOB_READ_WRITE_TOKEN akan otomatis di-inject ke environment variables (tidak perlu diisi manual)
+
+### Catatan
+
+- Upload sekarang menggunakan **Vercel Blob** (memory storage). File hasil upload akan punya URL publik dari lob.vercel-storage.com.
+- File lama di folder uploads/ yang tersimpan di disk lokal tidak akan muncul di deployment serverless (hanya relevan untuk local/dev).
+- API Express di-wrap dengan serverless-http melalui pi/index.ts, dan /api/* diarahkan ke Vercel Function via ercel.json.
+- Setelah setup ini, cukup git push untuk auto-deploy.
+
+### Deploy Lokal (Development)
+
+`ash
+# Terminal 1 - API
+cd server && npm run dev
+
+# Terminal 2 - Frontend
+npm run dev
+`
+

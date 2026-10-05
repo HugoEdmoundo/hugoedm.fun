@@ -1,21 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
+import { put } from "@vercel/blob";
 import { env } from "../env.js";
 import { requireAuth } from "../middleware/auth.js";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-export const uploadsDir = path.resolve(here, "../../uploads");
-
-mkdirSync(uploadsDir, { recursive: true });
-
-/**
- * MIME -> extension dipetakan sendiri agar nama file di disk tidak pernah
- * bergantung pada header kiriman client (bisa dipalsukan).
- */
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
@@ -26,24 +15,19 @@ const ALLOWED_TYPES: Record<string, string> = {
   "application/pdf": ".pdf",
 };
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const ext = ALLOWED_TYPES[file.mimetype] ?? "";
-    cb(null, `${Date.now()}-${randomUUID().slice(0, 8)}${ext}`);
-  },
-});
-
 class UnsupportedFileType extends Error {
   readonly status = 400;
 }
+
+// Memory storage (aman untuk serverless)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
   limits: { fileSize: env.uploadMaxBytes, files: 1 },
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_TYPES[file.mimetype]) {
-      cb(new UnsupportedFileType(`Tipe file tidak diizinkan: ${file.mimetype}`));
+      cb(new UnsupportedFileType(Tipe file tidak diizinkan: ));
       return;
     }
     cb(null, true);
@@ -52,12 +36,20 @@ const upload = multer({
 
 export const uploadRouter = Router();
 
-uploadRouter.post("/", requireAuth, upload.single("file"), (req, res) => {
+uploadRouter.post("/", requireAuth, upload.single("file"), async (req, res, next) => {
   if (!req.file) {
     res.status(400).json({ error: "No file uploaded" });
     return;
   }
-  res.status(201).json({ url: `${env.publicUrl}/uploads/${req.file.filename}` });
+
+  try {
+    const ext = ALLOWED_TYPES[req.file.mimetype] ?? "";
+    const filename = ${Date.now()}-;
+    const blob = await put(filename, req.file.buffer, { access: "public" });
+    res.status(201).json({ url: blob.url });
+  } catch (err) {
+    next(err);
+  }
 });
 
 uploadRouter.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
@@ -65,11 +57,12 @@ uploadRouter.use((err: unknown, _req: Request, res: Response, next: NextFunction
     res.status(400).json({ error: err.message });
     return;
   }
-  if (err instanceof multer.MulterError) {
+  if ((err as any)?.name === "MulterError") {
+    const multerErr = err as any;
     const message =
-      err.code === "LIMIT_FILE_SIZE"
-        ? `File melebihi batas ${Math.round(env.uploadMaxBytes / 1024 / 1024)} MB`
-        : `Upload ditolak: ${err.code}`;
+      multerErr.code === "LIMIT_FILE_SIZE"
+        ? File melebihi batas  MB
+        : Upload ditolak: ;
     res.status(400).json({ error: message });
     return;
   }
