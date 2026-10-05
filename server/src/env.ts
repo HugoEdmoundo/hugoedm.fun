@@ -14,4 +14,9 @@ export const env = {
   publicUrl: (process.env.PUBLIC_URL ?? "http://localhost:4000").replace(/\/+$/, ""),
   clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:8990",
   uploadMaxBytes: Number(process.env.UPLOAD_MAX_MB ?? 10) * 1024 * 1024,
+  /**
+   * Token Vercel Blob. Keberadaannya menentukan strategi upload: object storage
+   * (wajib di serverless) atau disk lokal (fallback development).
+   */
+  blobToken: process.env.BLOB_READ_WRITE_TOKEN ?? "",
 };

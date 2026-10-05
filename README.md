@@ -155,51 +155,63 @@ node scripts/gen-icon-registry.mjs
 
 ## Deploy (Full Serverless - Vercel)
 
-Sekarang project ini bisa di-deploy **full serverless** di Vercel (Frontend + API dalam 1 project).
+Frontend dan API ada di satu project Vercel. API Express di-wrap `serverless-http` lewat
+`api/index.ts`, lalu `/api/*` diarahkan ke function itu oleh `vercel.json`.
 
 ### Setup di Vercel
 
-1. Import repo ke [Vercel](https://vercel.com/)
+1. Import repo ke Vercel
 2. Framework: **Vite** (otomatis terdeteksi)
-3. Build Command: 
-pm run build
-4. Output Directory: dist
+3. Build Command: `npm run build`, Output Directory: `dist`
+4. Runtime Node diambil dari `engines.node` di `package.json` (22.x)
 
 ### Environment Variables
 
-Tambahkan env berikut di **Vercel → Project → Settings → Environment Variables**:
+Tambahkan di **Vercel → Project → Settings → Environment Variables**:
 
 | Key | Value | Keterangan |
 |---|---|---|
-| MONGODB_URI | mongodb+srv://... | Koneksi MongoDB Atlas |
-| JWT_SECRET | String acak minimal 32 karakter | Wajib |
-| JWT_EXPIRES_IN | 1h | Masa hidup token (opsional) |
-| LOGIN_RATE_LIMIT | 8 | Percobaan login gagal per IP (opsional) |
-| UPLOAD_MAX_MB | 10 | Batas ukuran upload (MB, opsional) |
-| PUBLIC_URL | https://your-app.vercel.app | Origin publik API |
-| CLIENT_ORIGIN | https://your-app.vercel.app | Origin frontend untuk CORS |
-| VITE_API_URL | *(kosongkan)* | Frontend langsung pakai /api (same origin) |
+| `MONGODB_URI` | `mongodb+srv://...` | Koneksi MongoDB Atlas |
+| `JWT_SECRET` | String acak minimal 32 karakter | Wajib di production |
+| `JWT_EXPIRES_IN` | `1h` | Masa hidup token |
+| `LOGIN_RATE_LIMIT` | `8` | Percobaan login gagal per IP per 15 menit |
+| `UPLOAD_MAX_MB` | `10` | Batas ukuran upload |
+| `PUBLIC_URL` | `https://<domain-deploy>` | Origin publik API |
+| `CLIENT_ORIGIN` | `https://<domain-deploy>` | Origin frontend untuk CORS |
+| `VITE_API_URL` | *(kosongkan)* | Frontend memakai `/api` same-origin |
 
-### Upload ke Vercel Blob
-
-1. Buka **Vercel → Storage → Blob → Create Blob Storage**
-2. Connect ke project ini
-3. BLOB_READ_WRITE_TOKEN akan otomatis di-inject ke environment variables (tidak perlu diisi manual)
+`BLOB_READ_WRITE_TOKEN` **tidak perlu diisi manual** — otomatis ter-inject begitu Blob
+diconnect lewat **Vercel → Storage → Blob**. Token ini yang mengaktifkan mode upload
+object storage; kalau kosong, upload jatuh ke disk lokal (cukup untuk `npm run dev`).
 
 ### Catatan
 
-- Upload sekarang menggunakan **Vercel Blob** (memory storage). File hasil upload akan punya URL publik dari lob.vercel-storage.com.
-- File lama di folder uploads/ yang tersimpan di disk lokal tidak akan muncul di deployment serverless (hanya relevan untuk local/dev).
-- API Express di-wrap dengan serverless-http melalui pi/index.ts, dan /api/* diarahkan ke Vercel Function via ercel.json.
-- Setelah setup ini, cukup git push untuk auto-deploy.
+- Root `package.json` memakai npm `workspaces: ["server"]`, supaya dependency backend
+  ikut ter-hoist ke `node_modules` root. Tanpa ini, Vercel tidak memasang
+  `express`/`mongoose` untuk function di `api/`.
+- Upload memakai dual-mode, dipilih berdasarkan ada/tidaknya `BLOB_READ_WRITE_TOKEN`:
+  - token ada → `multer.memoryStorage()` + `@vercel/blob` (butuh untuk serverless)
+  - token kosong → `multer.diskStorage()` ke `server/uploads/`
+- File lama di `server/uploads/` tidak ikut ter-deploy.Migrasi ulang lewat CMS.
 
-### Deploy Lokal (Development)
+### Develop lokal
 
-`ash
+Butuh dua terminal; Vite mem-proxy `/api` dan `/uploads` ke port 4000.
+
+```bash
 # Terminal 1 - API
-cd server && npm run dev
+npm run dev:api
 
 # Terminal 2 - Frontend
 npm run dev
-`
+```
 
+Frontend http://localhost:8990, API http://localhost:4000.
+
+### Verifikasi sebelum deploy
+
+```bash
+npm run build          # frontend
+npm --prefix server run typecheck
+npm --prefix server test
+```
