@@ -11,7 +11,12 @@ import type {
 
 export type { Education, Experience, GalleryItem, Project, SiteConfig, Skill, SocialLink, Task };
 
-const API_BASE = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/+$/, "");
+/**
+ * `VITE_API_URL` sengaja boleh dikosongkan di production karena frontend dan API
+ *BERBAGIAN origin (Vercel rewrite /api/*). Karena itu fallback-nya pakai `||`,
+ * bukan `??`: env yang dikosongkan jadi string kosong, bukan undefined.
+ */
+const API_BASE = (import.meta.env.VITE_API_URL || "/api").replace(/\/+$/, "");
 const TOKEN_KEY = "hugoedm_admin_token";
 
 type Doc = Record<string, unknown> & { _id?: string };
