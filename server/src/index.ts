@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import { connectDb, disconnectDb } from "./db.js";
+import { connectDb, disconnectDb, ensureDb } from "./db.js";
 import { env } from "./env.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 import { apiRouter } from "./routes/index.js";
@@ -35,6 +35,21 @@ app.use(
   }),
 );
 
+/**
+ * Serverless (Vercel) tidak menjalankan `start()`, jadi koneksi DB tidak pernah
+ * dibuat sebelum request masuk. Query pun akan ter-buffer sampai
+ * `serverSelectionTimeoutMS` habis dan response menggantung. Middleware ini
+ * memastikan koneksi siap tepat sebelum router dipanggil.
+ */
+app.use("/api", async (_req, res, next) => {
+  try {
+    await ensureDb();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use("/api", apiRouter);
 app.use(notFound);
 app.use(errorHandler);
@@ -43,7 +58,10 @@ async function start(): Promise<void> {
   if (!process.env.JWT_SECRET) {
     console.warn("[api] JWT_SECRET belum diset — memakai fallback dev. WAJIB diset di production.");
   }
-  await connectDb();
+  await connectDb().catch((err) => {
+    // Server tetap listen supaya `/api/health` masih bisa dipakai saat credentials salah.
+    console.error("[api] gagal connect ke MongoDB:", err);
+  });
   const server = app.listen(env.port, () => {
     console.log(`[api] listening on ${env.publicUrl} (db: ${env.mongodbUri.split("@")[1]})`);
   });
